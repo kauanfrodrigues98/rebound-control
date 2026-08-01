@@ -95,6 +95,9 @@
           >
             <UIcon class="nav-icon" name="i-lucide-activity" />
             Telemetria
+            <UBadge class="nav-badge" color="neutral" size="xs" variant="subtle">
+              em breve
+            </UBadge>
             <UIcon
               class="chevron"
               :name="
@@ -123,6 +126,9 @@
           >
             <UIcon class="nav-icon" name="i-lucide-settings" />
             Configurações
+            <UBadge class="nav-badge" color="neutral" size="xs" variant="subtle">
+              em breve
+            </UBadge>
             <UIcon
               class="chevron"
               :name="
@@ -198,7 +204,7 @@ import type { DropdownMenuItem } from '@nuxt/ui';
 
 const route = useRoute();
 const userMenuOpen = ref(false);
-const expandedNavGroups = ref(new Set(['licensing', 'settings']));
+const expandedNavGroups = ref(new Set(['licensing']));
 
 const routeMeta = computed(() => ({
   eyebrow: String(route.meta.eyebrow ?? 'Painel de controle'),

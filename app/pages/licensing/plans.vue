@@ -276,38 +276,38 @@
         <div class="drawer-section-title">Limites do contrato</div>
         <div class="form-row">
           <label>
-            Máximo de usuários
+            Máximo de usuários (0 = ilimitado)
             <input
               :value="formatIntegerInput(issueForm.maxUsers)"
               inputmode="numeric"
-              min="1"
+              min="0"
               required
               type="text"
-              @input="updateIssueNumber('maxUsers', $event)"
+              @input="updateIssueNumber('maxUsers', $event, 0)"
             />
           </label>
           <label>
-            Máximo de projetos
+            Máximo de projetos (0 = ilimitado)
             <input
               :value="formatIntegerInput(issueForm.maxProjects)"
               inputmode="numeric"
-              min="1"
+              min="0"
               required
               type="text"
-              @input="updateIssueNumber('maxProjects', $event)"
+              @input="updateIssueNumber('maxProjects', $event, 0)"
             />
           </label>
         </div>
         <div class="form-row">
           <label>
-            Eventos mensais
+            Eventos mensais (0 = ilimitado)
             <input
               :value="formatIntegerInput(issueForm.maxMonthlyEvents)"
               inputmode="numeric"
-              min="1"
+              min="0"
               required
               type="text"
-              @input="updateIssueNumber('maxMonthlyEvents', $event)"
+              @input="updateIssueNumber('maxMonthlyEvents', $event, 0)"
             />
           </label>
           <label>
@@ -349,6 +349,28 @@
         <label class="toggle">
           <input v-model="issueForm.aiEnabled" type="checkbox" />
           <span>IA habilitada</span>
+        </label>
+        <label v-if="issueForm.aiEnabled">
+          Análises IA/mês (0 = ilimitado)
+          <input
+            :value="formatIntegerInput(issueForm.maxAiAnalysisMonthly)"
+            inputmode="numeric"
+            min="0"
+            required
+            type="text"
+            @input="updateIssueNumber('maxAiAnalysisMonthly', $event, 0)"
+          />
+        </label>
+        <label>
+          Reprocessamentos manuais/mês (0 = ilimitado)
+          <input
+            :value="formatIntegerInput(issueForm.maxPayloadReplaysMonthly)"
+            inputmode="numeric"
+            min="0"
+            required
+            type="text"
+            @input="updateIssueNumber('maxPayloadReplaysMonthly', $event, 0)"
+          />
         </label>
         <label class="toggle">
           <input v-model="issueForm.automaticReplayEnabled" type="checkbox" />
@@ -453,38 +475,38 @@
         <div class="drawer-section-title">Limites do plano</div>
         <div class="form-row">
           <label>
-            Usuários
+            Usuários (0 = ilimitado)
             <input
               :value="formatIntegerInput(planForm.maxUsers)"
               inputmode="numeric"
-              min="1"
+              min="0"
               required
               type="text"
-              @input="updatePlanNumber('maxUsers', $event)"
+              @input="updatePlanNumber('maxUsers', $event, 0)"
             />
           </label>
           <label>
-            Projetos
+            Projetos (0 = ilimitado)
             <input
               :value="formatIntegerInput(planForm.maxProjects)"
               inputmode="numeric"
-              min="1"
+              min="0"
               required
               type="text"
-              @input="updatePlanNumber('maxProjects', $event)"
+              @input="updatePlanNumber('maxProjects', $event, 0)"
             />
           </label>
         </div>
         <div class="form-row">
           <label>
-            Eventos/mês
+            Eventos/mês (0 = ilimitado)
             <input
               :value="formatIntegerInput(planForm.maxMonthlyEvents)"
               inputmode="numeric"
-              min="1"
+              min="0"
               required
               type="text"
-              @input="updatePlanNumber('maxMonthlyEvents', $event)"
+              @input="updatePlanNumber('maxMonthlyEvents', $event, 0)"
             />
           </label>
           <label>
@@ -503,6 +525,28 @@
         <label class="toggle">
           <input v-model="planForm.aiEnabled" type="checkbox" />
           <span>Análise por IA</span>
+        </label>
+        <label v-if="planForm.aiEnabled">
+          Análises IA/mês (0 = ilimitado)
+          <input
+            :value="formatIntegerInput(planForm.maxAiAnalysisMonthly)"
+            inputmode="numeric"
+            min="0"
+            required
+            type="text"
+            @input="updatePlanNumber('maxAiAnalysisMonthly', $event, 0)"
+          />
+        </label>
+        <label>
+          Reprocessamentos manuais/mês (0 = ilimitado)
+          <input
+            :value="formatIntegerInput(planForm.maxPayloadReplaysMonthly)"
+            inputmode="numeric"
+            min="0"
+            required
+            type="text"
+            @input="updatePlanNumber('maxPayloadReplaysMonthly', $event, 0)"
+          />
         </label>
         <label class="toggle">
           <input v-model="planForm.automaticReplayEnabled" type="checkbox" />
@@ -568,6 +612,8 @@ const issueForm = reactive({
   maxUsers: 10,
   maxProjects: 3,
   maxMonthlyEvents: 25000,
+  maxAiAnalysisMonthly: 100,
+  maxPayloadReplaysMonthly: 30,
   retentionDays: 30,
   supportSlaHours: 72,
   priceLabel: '',
@@ -586,6 +632,8 @@ const planForm = reactive({
   maxUsers: 10,
   maxProjects: 3,
   maxMonthlyEvents: 25000,
+  maxAiAnalysisMonthly: 100,
+  maxPayloadReplaysMonthly: 30,
   retentionDays: 30,
   supportSlaHours: 72,
   aiEnabled: false,
@@ -594,6 +642,8 @@ const planForm = reactive({
 
 type IssueNumberField =
   | 'maxMonthlyEvents'
+  | 'maxAiAnalysisMonthly'
+  | 'maxPayloadReplaysMonthly'
   | 'maxProjects'
   | 'maxUsers'
   | 'retentionDays'
@@ -699,8 +749,20 @@ const selectedPlanLimits = computed(() => {
     {
       key: 'maxMonthlyEvents',
       label: 'Eventos mensais',
-      value: formatNumber(entitlements.maxMonthlyEvents),
+      value: formatLimit(entitlements.maxMonthlyEvents),
       description: 'Franquia antes de negociação extra.',
+    },
+    {
+      key: 'maxAiAnalysisMonthly',
+      label: 'Análises IA/mês',
+      value: formatLimit(entitlements.maxAiAnalysisMonthly),
+      description: 'Franquia mensal de análises por IA.',
+    },
+    {
+      key: 'maxPayloadReplaysMonthly',
+      label: 'Replays manuais/mês',
+      value: formatLimit(entitlements.maxPayloadReplaysMonthly),
+      description: 'Franquia mensal de reprocessamentos manuais.',
     },
     {
       key: 'retentionDays',
@@ -780,10 +842,10 @@ function updateMaskedCurrency(
   input.value = value;
 }
 
-function updateIssueNumber(field: IssueNumberField, event: Event): void {
+function updateIssueNumber(field: IssueNumberField, event: Event, minimum = 1): void {
   updateMaskedNumber(event, (value) => {
     issueForm[field] = value;
-  });
+  }, minimum);
 }
 
 function updatePlanNumber(field: PlanNumberField, event: Event, minimum = 1): void {
@@ -839,9 +901,14 @@ function openPlanDrawer(plan?: LicensePlan): void {
 
 function fillIssueForm(plan: LicensePlan): void {
   const entitlements = plan.entitlements;
-  issueForm.maxUsers = Number(entitlements.maxUsers ?? 10);
-  issueForm.maxProjects = Number(entitlements.maxProjects ?? 3);
-  issueForm.maxMonthlyEvents = Number(entitlements.maxMonthlyEvents ?? 25000);
+  issueForm.maxUsers = readLimitForForm(entitlements.maxUsers, 10);
+  issueForm.maxProjects = readLimitForForm(entitlements.maxProjects, 3);
+  issueForm.maxMonthlyEvents = readLimitForForm(entitlements.maxMonthlyEvents, 25000);
+  issueForm.maxAiAnalysisMonthly = readLimitForForm(entitlements.maxAiAnalysisMonthly, 100);
+  issueForm.maxPayloadReplaysMonthly = readLimitForForm(
+    entitlements.maxPayloadReplaysMonthly,
+    30,
+  );
   issueForm.retentionDays = Number(entitlements.retentionDays ?? 30);
   issueForm.supportSlaHours = Number(entitlements.supportSlaHours ?? 72);
   issueForm.priceLabel = plan.priceLabel;
@@ -865,9 +932,11 @@ async function issueLicense(): Promise<void> {
       expiresAt: toEndOfDayIso(issueForm.expiresAt),
       planId: selectedPlan.value.id,
       entitlements: {
-        maxUsers: issueForm.maxUsers,
-        maxProjects: issueForm.maxProjects,
-        maxMonthlyEvents: issueForm.maxMonthlyEvents,
+        maxUsers: serializeLimit(issueForm.maxUsers),
+        maxProjects: serializeLimit(issueForm.maxProjects),
+        maxMonthlyEvents: serializeLimit(issueForm.maxMonthlyEvents),
+        maxAiAnalysisMonthly: serializeLimit(issueForm.maxAiAnalysisMonthly),
+        maxPayloadReplaysMonthly: serializeLimit(issueForm.maxPayloadReplaysMonthly),
         retentionDays: issueForm.retentionDays,
         supportSlaHours: issueForm.supportSlaHours,
         priceLabel: issueForm.priceLabel,
@@ -958,9 +1027,11 @@ function buildPlanPayload(): LicensePlanPayload {
     active: planForm.active,
     sortOrder: planForm.sortOrder,
     entitlements: {
-      maxUsers: planForm.maxUsers,
-      maxProjects: planForm.maxProjects,
-      maxMonthlyEvents: planForm.maxMonthlyEvents,
+      maxUsers: serializeLimit(planForm.maxUsers),
+      maxProjects: serializeLimit(planForm.maxProjects),
+      maxMonthlyEvents: serializeLimit(planForm.maxMonthlyEvents),
+      maxAiAnalysisMonthly: serializeLimit(planForm.maxAiAnalysisMonthly),
+      maxPayloadReplaysMonthly: serializeLimit(planForm.maxPayloadReplaysMonthly),
       retentionDays: planForm.retentionDays,
       supportSlaHours: planForm.supportSlaHours,
       aiEnabled: planForm.aiEnabled,
@@ -979,9 +1050,14 @@ function fillPlanForm(plan: LicensePlan): void {
   planForm.priceLabel = plan.priceLabel;
   planForm.active = plan.active;
   planForm.sortOrder = plan.sortOrder;
-  planForm.maxUsers = Number(entitlements.maxUsers ?? 10);
-  planForm.maxProjects = Number(entitlements.maxProjects ?? 3);
-  planForm.maxMonthlyEvents = Number(entitlements.maxMonthlyEvents ?? 25000);
+  planForm.maxUsers = readLimitForForm(entitlements.maxUsers, 10);
+  planForm.maxProjects = readLimitForForm(entitlements.maxProjects, 3);
+  planForm.maxMonthlyEvents = readLimitForForm(entitlements.maxMonthlyEvents, 25000);
+  planForm.maxAiAnalysisMonthly = readLimitForForm(entitlements.maxAiAnalysisMonthly, 100);
+  planForm.maxPayloadReplaysMonthly = readLimitForForm(
+    entitlements.maxPayloadReplaysMonthly,
+    30,
+  );
   planForm.retentionDays = Number(entitlements.retentionDays ?? 30);
   planForm.supportSlaHours = Number(entitlements.supportSlaHours ?? 72);
   planForm.aiEnabled = Boolean(entitlements.aiEnabled);
@@ -1000,6 +1076,8 @@ function resetPlanForm(): void {
   planForm.maxUsers = 10;
   planForm.maxProjects = 3;
   planForm.maxMonthlyEvents = 25000;
+  planForm.maxAiAnalysisMonthly = 100;
+  planForm.maxPayloadReplaysMonthly = 30;
   planForm.retentionDays = 30;
   planForm.supportSlaHours = 72;
   planForm.aiEnabled = false;
@@ -1031,7 +1109,24 @@ function formatBoolean(value: unknown): string {
 }
 
 function formatLimit(value: unknown): string {
+  if (value === 'unlimited' || value === null) {
+    return 'Ilimitado';
+  }
+
   return typeof value === 'number' ? formatNumber(value) : String(value ?? '-');
+}
+
+function readLimitForForm(value: unknown, fallback: number): number {
+  if (value === 'unlimited' || value === null) {
+    return 0;
+  }
+
+  const numberValue = Number(value ?? fallback);
+  return Number.isFinite(numberValue) ? numberValue : fallback;
+}
+
+function serializeLimit(value: number): number | string {
+  return value <= 0 ? 'unlimited' : value;
 }
 
 function formatNumber(value: unknown): string {

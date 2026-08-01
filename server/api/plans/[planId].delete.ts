@@ -1,4 +1,5 @@
-import { requestControlApi } from '../../../utils/control-api';
+import { getRouterParam } from 'h3';
+import { requestControlApi } from '../../utils/control-api';
 
 export default defineEventHandler((event) => {
   const planId = getRouterParam(event, 'planId');

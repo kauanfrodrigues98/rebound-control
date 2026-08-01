@@ -1,5 +1,5 @@
-import { readBody } from 'h3';
-import { requestControlApi } from '../../../utils/control-api';
+import { getRouterParam, readBody } from 'h3';
+import { requestControlApi } from '../../utils/control-api';
 
 export default defineEventHandler(async (event) => {
   const planId = getRouterParam(event, 'planId');

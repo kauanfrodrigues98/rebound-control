@@ -14,10 +14,12 @@ export function useControlAuth() {
   const user = useState<ControlUserSession | null>('control-auth-user', () => null)
   const isCheckingSession = useState('control-auth-checking', () => false)
 
-  const apiFetch = $fetch.create({
-    baseURL: '/api',
-    credentials: 'include',
-  })
+  const requestFetch = import.meta.server ? useRequestFetch() : $fetch
+  const apiFetch = <T>(path: string, options: Parameters<typeof $fetch>[1] = {}) =>
+    requestFetch<T>(`/api${path}`, {
+      ...options,
+      credentials: 'include',
+    })
 
   async function loadCurrentUser(): Promise<ControlUserSession | null> {
     if (user.value) return user.value

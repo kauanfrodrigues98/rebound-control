@@ -223,38 +223,38 @@
         <template v-if="form.customLimits">
           <div class="form-row">
             <label>
-              Máximo de usuários
+              Máximo de usuários (0 = ilimitado)
               <input
                 :value="formatIntegerInput(form.maxUsers)"
                 inputmode="numeric"
-                min="1"
+                min="0"
                 required
                 type="text"
-                @input="updateFormNumber(form, 'maxUsers', $event)"
+                @input="updateFormNumber(form, 'maxUsers', $event, 0)"
               />
             </label>
             <label>
-              Máximo de projetos
+              Máximo de projetos (0 = ilimitado)
               <input
                 :value="formatIntegerInput(form.maxProjects)"
                 inputmode="numeric"
-                min="1"
+                min="0"
                 required
                 type="text"
-                @input="updateFormNumber(form, 'maxProjects', $event)"
+                @input="updateFormNumber(form, 'maxProjects', $event, 0)"
               />
             </label>
           </div>
           <div class="form-row">
             <label>
-              Eventos mensais
+              Eventos mensais (0 = ilimitado)
               <input
                 :value="formatIntegerInput(form.maxMonthlyEvents)"
                 inputmode="numeric"
-                min="1"
+                min="0"
                 required
                 type="text"
-                @input="updateFormNumber(form, 'maxMonthlyEvents', $event)"
+                @input="updateFormNumber(form, 'maxMonthlyEvents', $event, 0)"
               />
             </label>
             <label>
@@ -272,6 +272,28 @@
           <label class="toggle">
             <input v-model="form.aiEnabled" type="checkbox" />
             <span>IA habilitada</span>
+          </label>
+          <label v-if="form.aiEnabled">
+            Análises IA/mês (0 = ilimitado)
+            <input
+              :value="formatIntegerInput(form.maxAiAnalysisMonthly)"
+              inputmode="numeric"
+              min="0"
+              required
+              type="text"
+              @input="updateFormNumber(form, 'maxAiAnalysisMonthly', $event, 0)"
+            />
+          </label>
+          <label>
+            Reprocessamentos manuais/mês (0 = ilimitado)
+            <input
+              :value="formatIntegerInput(form.maxPayloadReplaysMonthly)"
+              inputmode="numeric"
+              min="0"
+              required
+              type="text"
+              @input="updateFormNumber(form, 'maxPayloadReplaysMonthly', $event, 0)"
+            />
           </label>
           <label class="toggle">
             <input v-model="form.automaticReplayEnabled" type="checkbox" />
@@ -413,38 +435,38 @@
         <template v-if="reissueForm.customLimits">
           <div class="form-row">
             <label>
-              Máximo de usuários
+              Máximo de usuários (0 = ilimitado)
               <input
                 :value="formatIntegerInput(reissueForm.maxUsers)"
                 inputmode="numeric"
-                min="1"
+                min="0"
                 required
                 type="text"
-                @input="updateFormNumber(reissueForm, 'maxUsers', $event)"
+                @input="updateFormNumber(reissueForm, 'maxUsers', $event, 0)"
               />
             </label>
             <label>
-              Máximo de projetos
+              Máximo de projetos (0 = ilimitado)
               <input
                 :value="formatIntegerInput(reissueForm.maxProjects)"
                 inputmode="numeric"
-                min="1"
+                min="0"
                 required
                 type="text"
-                @input="updateFormNumber(reissueForm, 'maxProjects', $event)"
+                @input="updateFormNumber(reissueForm, 'maxProjects', $event, 0)"
               />
             </label>
           </div>
           <div class="form-row">
             <label>
-              Eventos mensais
+              Eventos mensais (0 = ilimitado)
               <input
                 :value="formatIntegerInput(reissueForm.maxMonthlyEvents)"
                 inputmode="numeric"
-                min="1"
+                min="0"
                 required
                 type="text"
-                @input="updateFormNumber(reissueForm, 'maxMonthlyEvents', $event)"
+                @input="updateFormNumber(reissueForm, 'maxMonthlyEvents', $event, 0)"
               />
             </label>
             <label>
@@ -462,6 +484,28 @@
           <label class="toggle">
             <input v-model="reissueForm.aiEnabled" type="checkbox" />
             <span>IA habilitada</span>
+          </label>
+          <label v-if="reissueForm.aiEnabled">
+            Análises IA/mês (0 = ilimitado)
+            <input
+              :value="formatIntegerInput(reissueForm.maxAiAnalysisMonthly)"
+              inputmode="numeric"
+              min="0"
+              required
+              type="text"
+              @input="updateFormNumber(reissueForm, 'maxAiAnalysisMonthly', $event, 0)"
+            />
+          </label>
+          <label>
+            Reprocessamentos manuais/mês (0 = ilimitado)
+            <input
+              :value="formatIntegerInput(reissueForm.maxPayloadReplaysMonthly)"
+              inputmode="numeric"
+              min="0"
+              required
+              type="text"
+              @input="updateFormNumber(reissueForm, 'maxPayloadReplaysMonthly', $event, 0)"
+            />
           </label>
           <label class="toggle">
             <input v-model="reissueForm.automaticReplayEnabled" type="checkbox" />
@@ -524,6 +568,8 @@ const form = reactive({
   maxUsers: 10,
   maxProjects: 3,
   maxMonthlyEvents: 25000,
+  maxAiAnalysisMonthly: 100,
+  maxPayloadReplaysMonthly: 30,
   retentionDays: 30,
   aiEnabled: true,
   automaticReplayEnabled: false,
@@ -536,6 +582,8 @@ const reissueForm = reactive({
   maxUsers: 10,
   maxProjects: 3,
   maxMonthlyEvents: 25000,
+  maxAiAnalysisMonthly: 100,
+  maxPayloadReplaysMonthly: 30,
   retentionDays: 30,
   aiEnabled: true,
   automaticReplayEnabled: false,
@@ -543,6 +591,8 @@ const reissueForm = reactive({
 
 type LimitNumberField =
   | 'maxMonthlyEvents'
+  | 'maxAiAnalysisMonthly'
+  | 'maxPayloadReplaysMonthly'
   | 'maxProjects'
   | 'maxUsers'
   | 'retentionDays';
@@ -704,14 +754,19 @@ watch(
   },
 );
 
-function updateFormNumber(target: LimitForm, field: LimitNumberField, event: Event): void {
+function updateFormNumber(
+  target: LimitForm,
+  field: LimitNumberField,
+  event: Event,
+  minimum = 1,
+): void {
   const input = event.target as HTMLInputElement | null;
 
   if (!input) {
     return;
   }
 
-  const value = Math.max(1, parseMaskedInteger(input.value, 1));
+  const value = Math.max(minimum, parseMaskedInteger(input.value, minimum));
   target[field] = value;
   input.value = formatIntegerInput(value);
 }
@@ -769,6 +824,8 @@ function formatEntitlementLabel(key: string): string {
     automaticReplayEnabled: 'Replay automático',
     cadence: 'Cadência',
     maxMonthlyEvents: 'Eventos mensais',
+    maxAiAnalysisMonthly: 'Análises IA/mês',
+    maxPayloadReplaysMonthly: 'Reprocessamentos manuais/mês',
     maxProjects: 'Projetos',
     maxUsers: 'Usuários',
     planId: 'ID do plano',
@@ -887,6 +944,8 @@ function applyPlanToLimitForm(
     maxUsers: number;
     maxProjects: number;
     maxMonthlyEvents: number;
+    maxAiAnalysisMonthly: number;
+    maxPayloadReplaysMonthly: number;
     retentionDays: number;
     aiEnabled: boolean;
     automaticReplayEnabled: boolean;
@@ -901,14 +960,21 @@ function applyEntitlementsToLimitForm(
     maxUsers: number;
     maxProjects: number;
     maxMonthlyEvents: number;
+    maxAiAnalysisMonthly: number;
+    maxPayloadReplaysMonthly: number;
     retentionDays: number;
     aiEnabled: boolean;
     automaticReplayEnabled: boolean;
   },
 ): void {
-  target.maxUsers = Number(entitlements.maxUsers ?? 10);
-  target.maxProjects = Number(entitlements.maxProjects ?? 3);
-  target.maxMonthlyEvents = Number(entitlements.maxMonthlyEvents ?? 25000);
+  target.maxUsers = readLimitForForm(entitlements.maxUsers, 10);
+  target.maxProjects = readLimitForForm(entitlements.maxProjects, 3);
+  target.maxMonthlyEvents = readLimitForForm(entitlements.maxMonthlyEvents, 25000);
+  target.maxAiAnalysisMonthly = readLimitForForm(entitlements.maxAiAnalysisMonthly, 100);
+  target.maxPayloadReplaysMonthly = readLimitForForm(
+    entitlements.maxPayloadReplaysMonthly,
+    30,
+  );
   target.retentionDays = Number(entitlements.retentionDays ?? 30);
   target.aiEnabled = Boolean(entitlements.aiEnabled ?? true);
   target.automaticReplayEnabled = Boolean(
@@ -920,14 +986,18 @@ function buildLimitEntitlements(source: {
   maxUsers: number;
   maxProjects: number;
   maxMonthlyEvents: number;
+  maxAiAnalysisMonthly: number;
+  maxPayloadReplaysMonthly: number;
   retentionDays: number;
   aiEnabled: boolean;
   automaticReplayEnabled: boolean;
 }): Record<string, boolean | number | string> {
   return {
-    maxUsers: source.maxUsers,
-    maxProjects: source.maxProjects,
-    maxMonthlyEvents: source.maxMonthlyEvents,
+    maxUsers: serializeLimit(source.maxUsers),
+    maxProjects: serializeLimit(source.maxProjects),
+    maxMonthlyEvents: serializeLimit(source.maxMonthlyEvents),
+    maxAiAnalysisMonthly: serializeLimit(source.maxAiAnalysisMonthly),
+    maxPayloadReplaysMonthly: serializeLimit(source.maxPayloadReplaysMonthly),
     retentionDays: source.retentionDays,
     aiEnabled: source.aiEnabled,
     automaticReplayEnabled: source.automaticReplayEnabled,
@@ -974,7 +1044,17 @@ function buildPlanPreviewFields(
     {
       key: 'maxMonthlyEvents',
       label: 'Eventos/mês',
-      value: formatNumber(entitlements.maxMonthlyEvents),
+      value: formatLimit(entitlements.maxMonthlyEvents),
+    },
+    {
+      key: 'maxAiAnalysisMonthly',
+      label: 'Análises IA/mês',
+      value: formatLimit(entitlements.maxAiAnalysisMonthly),
+    },
+    {
+      key: 'maxPayloadReplaysMonthly',
+      label: 'Replays manuais/mês',
+      value: formatLimit(entitlements.maxPayloadReplaysMonthly),
     },
     {
       key: 'retentionDays',
@@ -1002,6 +1082,27 @@ function formatNumber(value: unknown): string {
   }
 
   return new Intl.NumberFormat('pt-BR').format(numberValue);
+}
+
+function formatLimit(value: unknown): string {
+  if (value === 'unlimited' || value === null) {
+    return 'Ilimitado';
+  }
+
+  return formatNumber(value);
+}
+
+function readLimitForForm(value: unknown, fallback: number): number {
+  if (value === 'unlimited' || value === null) {
+    return 0;
+  }
+
+  const numberValue = Number(value ?? fallback);
+  return Number.isFinite(numberValue) ? numberValue : fallback;
+}
+
+function serializeLimit(value: number): number | string {
+  return value <= 0 ? 'unlimited' : value;
 }
 
 function formatCadence(cadence: LicensePlan['cadence']): string {

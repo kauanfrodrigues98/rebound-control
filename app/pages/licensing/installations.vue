@@ -124,6 +124,34 @@
     <template #body>
       <form class="drawer-form" @submit.prevent="createLicense">
         <label>
+          Plano cadastrado
+          <select v-model="form.planId" required>
+            <option disabled value="">Selecione um plano</option>
+            <option v-for="plan in plans" :key="plan.id" :value="plan.id">
+              {{ plan.name }} · {{ formatCadence(plan.cadence) }}
+            </option>
+          </select>
+        </label>
+
+        <div v-if="selectedCreatePlan" class="drawer-plan-preview">
+          <div>
+            <strong>{{ selectedCreatePlan.name }}</strong>
+            <p>{{ selectedCreatePlan.description }}</p>
+          </div>
+          <span class="badge neutral">{{ selectedCreatePlan.priceLabel }}</span>
+          <div class="entitlement-grid">
+            <label
+              v-for="entitlement in createPlanPreviewFields"
+              :key="entitlement.key"
+              class="readonly-field"
+            >
+              <span>{{ entitlement.label }}</span>
+              <input :value="entitlement.value" readonly />
+            </label>
+          </div>
+        </div>
+
+        <label>
           ID do cliente
           <input
             ref="customerInput"
@@ -156,35 +184,91 @@
           <ControlDatePicker v-model="form.expiresAt" required />
         </label>
 
-        <div class="form-row">
-          <label>
-            Máximo de usuários
-            <input
-              :value="formatIntegerInput(form.maxUsers)"
-              inputmode="numeric"
-              min="1"
-              required
-              type="text"
-              @input="updateFormNumber(form, 'maxUsers', $event)"
-            />
-          </label>
-          <label>
-            Máximo de projetos
-            <input
-              :value="formatIntegerInput(form.maxProjects)"
-              inputmode="numeric"
-              min="1"
-              required
-              type="text"
-              @input="updateFormNumber(form, 'maxProjects', $event)"
-            />
-          </label>
-        </div>
-
         <label class="toggle">
-          <input v-model="form.aiEnabled" type="checkbox" />
-          <span>IA habilitada</span>
+          <input v-model="form.customLimits" type="checkbox" />
+          <span>Customizar limites deste contrato</span>
         </label>
+
+        <template v-if="form.customLimits">
+          <div class="form-row">
+            <label>
+              Máximo de usuários (0 = ilimitado)
+              <input
+                :value="formatIntegerInput(form.maxUsers)"
+                inputmode="numeric"
+                min="0"
+                required
+                type="text"
+                @input="updateFormNumber(form, 'maxUsers', $event, 0)"
+              />
+            </label>
+            <label>
+              Máximo de projetos (0 = ilimitado)
+              <input
+                :value="formatIntegerInput(form.maxProjects)"
+                inputmode="numeric"
+                min="0"
+                required
+                type="text"
+                @input="updateFormNumber(form, 'maxProjects', $event, 0)"
+              />
+            </label>
+          </div>
+          <div class="form-row">
+            <label>
+              Eventos mensais (0 = ilimitado)
+              <input
+                :value="formatIntegerInput(form.maxMonthlyEvents)"
+                inputmode="numeric"
+                min="0"
+                required
+                type="text"
+                @input="updateFormNumber(form, 'maxMonthlyEvents', $event, 0)"
+              />
+            </label>
+            <label>
+              Retenção em dias
+              <input
+                :value="formatIntegerInput(form.retentionDays)"
+                inputmode="numeric"
+                min="1"
+                required
+                type="text"
+                @input="updateFormNumber(form, 'retentionDays', $event)"
+              />
+            </label>
+          </div>
+          <label class="toggle">
+            <input v-model="form.aiEnabled" type="checkbox" />
+            <span>IA habilitada</span>
+          </label>
+          <label v-if="form.aiEnabled">
+            Análises IA/mês (0 = ilimitado)
+            <input
+              :value="formatIntegerInput(form.maxAiAnalysisMonthly)"
+              inputmode="numeric"
+              min="0"
+              required
+              type="text"
+              @input="updateFormNumber(form, 'maxAiAnalysisMonthly', $event, 0)"
+            />
+          </label>
+          <label>
+            Reprocessamentos manuais/mês (0 = ilimitado)
+            <input
+              :value="formatIntegerInput(form.maxPayloadReplaysMonthly)"
+              inputmode="numeric"
+              min="0"
+              required
+              type="text"
+              @input="updateFormNumber(form, 'maxPayloadReplaysMonthly', $event, 0)"
+            />
+          </label>
+          <label class="toggle">
+            <input v-model="form.automaticReplayEnabled" type="checkbox" />
+            <span>Replay automático habilitado</span>
+          </label>
+        </template>
 
         <button class="submit-button" :disabled="creating" type="submit">
           {{ creating ? 'Emitindo...' : 'Emitir licença' }}
@@ -301,37 +385,121 @@
     <template #body>
       <form class="drawer-form" @submit.prevent="reissueSelectedLicense">
         <label>
+          Plano cadastrado
+          <select v-model="reissueForm.planId" required>
+            <option disabled value="">Selecione um plano</option>
+            <option v-for="plan in plans" :key="plan.id" :value="plan.id">
+              {{ plan.name }} · {{ formatCadence(plan.cadence) }}
+            </option>
+          </select>
+        </label>
+
+        <div v-if="selectedReissuePlan" class="drawer-plan-preview">
+          <div>
+            <strong>{{ selectedReissuePlan.name }}</strong>
+            <p>{{ selectedReissuePlan.description }}</p>
+          </div>
+          <span class="badge neutral">{{ selectedReissuePlan.priceLabel }}</span>
+          <div class="entitlement-grid">
+            <label
+              v-for="entitlement in reissuePlanPreviewFields"
+              :key="entitlement.key"
+              class="readonly-field"
+            >
+              <span>{{ entitlement.label }}</span>
+              <input :value="entitlement.value" readonly />
+            </label>
+          </div>
+        </div>
+
+        <label>
           Novo vencimento
           <ControlDatePicker v-model="reissueForm.expiresAt" required />
         </label>
-        <div class="form-row">
-          <label>
-            Máximo de usuários
-            <input
-              :value="formatIntegerInput(reissueForm.maxUsers)"
-              inputmode="numeric"
-              min="1"
-              required
-              type="text"
-              @input="updateFormNumber(reissueForm, 'maxUsers', $event)"
-            />
-          </label>
-          <label>
-            Máximo de projetos
-            <input
-              :value="formatIntegerInput(reissueForm.maxProjects)"
-              inputmode="numeric"
-              min="1"
-              required
-              type="text"
-              @input="updateFormNumber(reissueForm, 'maxProjects', $event)"
-            />
-          </label>
-        </div>
         <label class="toggle">
-          <input v-model="reissueForm.aiEnabled" type="checkbox" />
-          <span>IA habilitada</span>
+          <input v-model="reissueForm.customLimits" type="checkbox" />
+          <span>Customizar limites desta renovação</span>
         </label>
+        <template v-if="reissueForm.customLimits">
+          <div class="form-row">
+            <label>
+              Máximo de usuários (0 = ilimitado)
+              <input
+                :value="formatIntegerInput(reissueForm.maxUsers)"
+                inputmode="numeric"
+                min="0"
+                required
+                type="text"
+                @input="updateFormNumber(reissueForm, 'maxUsers', $event, 0)"
+              />
+            </label>
+            <label>
+              Máximo de projetos (0 = ilimitado)
+              <input
+                :value="formatIntegerInput(reissueForm.maxProjects)"
+                inputmode="numeric"
+                min="0"
+                required
+                type="text"
+                @input="updateFormNumber(reissueForm, 'maxProjects', $event, 0)"
+              />
+            </label>
+          </div>
+          <div class="form-row">
+            <label>
+              Eventos mensais (0 = ilimitado)
+              <input
+                :value="formatIntegerInput(reissueForm.maxMonthlyEvents)"
+                inputmode="numeric"
+                min="0"
+                required
+                type="text"
+                @input="updateFormNumber(reissueForm, 'maxMonthlyEvents', $event, 0)"
+              />
+            </label>
+            <label>
+              Retenção em dias
+              <input
+                :value="formatIntegerInput(reissueForm.retentionDays)"
+                inputmode="numeric"
+                min="1"
+                required
+                type="text"
+                @input="updateFormNumber(reissueForm, 'retentionDays', $event)"
+              />
+            </label>
+          </div>
+          <label class="toggle">
+            <input v-model="reissueForm.aiEnabled" type="checkbox" />
+            <span>IA habilitada</span>
+          </label>
+          <label v-if="reissueForm.aiEnabled">
+            Análises IA/mês (0 = ilimitado)
+            <input
+              :value="formatIntegerInput(reissueForm.maxAiAnalysisMonthly)"
+              inputmode="numeric"
+              min="0"
+              required
+              type="text"
+              @input="updateFormNumber(reissueForm, 'maxAiAnalysisMonthly', $event, 0)"
+            />
+          </label>
+          <label>
+            Reprocessamentos manuais/mês (0 = ilimitado)
+            <input
+              :value="formatIntegerInput(reissueForm.maxPayloadReplaysMonthly)"
+              inputmode="numeric"
+              min="0"
+              required
+              type="text"
+              @input="updateFormNumber(reissueForm, 'maxPayloadReplaysMonthly', $event, 0)"
+            />
+          </label>
+          <label class="toggle">
+            <input v-model="reissueForm.automaticReplayEnabled" type="checkbox" />
+            <span>Replay automático habilitado</span>
+          </label>
+        </template>
         <button class="submit-button" :disabled="reissuing" type="submit">
           {{ reissuing ? 'Renovando...' : 'Renovar licença' }}
         </button>
@@ -345,6 +513,7 @@ import type {
   ActivateLicenseResponse,
   CurrentLicenseResponse,
   LicenseListItem,
+  LicensePlan,
 } from '~/types/licensing';
 
 definePageMeta({
@@ -357,6 +526,7 @@ const {
   getCurrentLicense,
   getLicenseHealth,
   listLicenses,
+  listPlans,
   reissueLicense,
 } = useLicenses();
 const toast = useToast();
@@ -374,27 +544,48 @@ const nextMonth = new Date();
 nextMonth.setDate(nextMonth.getDate() + 30);
 
 const form = reactive({
+  planId: '',
   customerId: '',
   contractId: '',
   installationName: '',
   expiresAt: toDateInputValue(nextMonth),
+  customLimits: false,
   maxUsers: 10,
   maxProjects: 3,
+  maxMonthlyEvents: 25000,
+  maxAiAnalysisMonthly: 100,
+  maxPayloadReplaysMonthly: 30,
+  retentionDays: 30,
   aiEnabled: true,
+  automaticReplayEnabled: false,
 });
 
 const reissueForm = reactive({
+  planId: '',
   expiresAt: toDateInputValue(nextMonth),
+  customLimits: false,
   maxUsers: 10,
   maxProjects: 3,
+  maxMonthlyEvents: 25000,
+  maxAiAnalysisMonthly: 100,
+  maxPayloadReplaysMonthly: 30,
+  retentionDays: 30,
   aiEnabled: true,
+  automaticReplayEnabled: false,
 });
 
-type LimitNumberField = 'maxProjects' | 'maxUsers';
+type LimitNumberField =
+  | 'maxMonthlyEvents'
+  | 'maxAiAnalysisMonthly'
+  | 'maxPayloadReplaysMonthly'
+  | 'maxProjects'
+  | 'maxUsers'
+  | 'retentionDays';
 type LimitForm = {
   [key in LimitNumberField]: number;
 };
 
+const { data: plansData } = await listPlans();
 const {
   data,
   pending,
@@ -402,7 +593,23 @@ const {
   refresh: refreshLicenses,
 } = await listLicenses();
 
+const plans = computed(() => plansData.value?.plans ?? []);
 const licenses = computed(() => data.value?.licenses ?? []);
+const selectedCreatePlan = computed(() => findPlanById(form.planId));
+const selectedReissuePlan = computed(() => findPlanById(reissueForm.planId));
+const createPlanPreviewFields = computed(() =>
+  selectedCreatePlan.value
+    ? buildPlanPreviewFields(selectedCreatePlan.value, form.customLimits ? form : undefined)
+    : [],
+);
+const reissuePlanPreviewFields = computed(() =>
+  selectedReissuePlan.value
+    ? buildPlanPreviewFields(
+        selectedReissuePlan.value,
+        reissueForm.customLimits ? reissueForm : undefined,
+      )
+    : [],
+);
 const entitlementFields = computed(() =>
   Object.entries(currentLicense.value?.entitlements ?? {}).map(([key, value]) => ({
     key,
@@ -447,14 +654,58 @@ const metrics = computed(() => [
   },
 ]);
 
-function updateFormNumber(target: LimitForm, field: LimitNumberField, event: Event): void {
+watch(
+  plans,
+  (currentPlans) => {
+    if (!currentPlans.length) {
+      return;
+    }
+
+    const defaultPlanId =
+      currentPlans.find((plan) => plan.featured)?.id ?? currentPlans[0].id;
+
+    if (!form.planId) {
+      form.planId = defaultPlanId;
+    }
+
+    if (!reissueForm.planId) {
+      reissueForm.planId = defaultPlanId;
+    }
+  },
+  { immediate: true },
+);
+
+watch(
+  () => form.planId,
+  () => {
+    if (!form.customLimits && selectedCreatePlan.value) {
+      applyPlanToLimitForm(selectedCreatePlan.value, form);
+    }
+  },
+);
+
+watch(
+  () => reissueForm.planId,
+  () => {
+    if (!reissueForm.customLimits && selectedReissuePlan.value) {
+      applyPlanToLimitForm(selectedReissuePlan.value, reissueForm);
+    }
+  },
+);
+
+function updateFormNumber(
+  target: LimitForm,
+  field: LimitNumberField,
+  event: Event,
+  minimum = 1,
+): void {
   const input = event.target as HTMLInputElement | null;
 
   if (!input) {
     return;
   }
 
-  const value = Math.max(1, parseMaskedInteger(input.value, 1));
+  const value = Math.max(minimum, parseMaskedInteger(input.value, minimum));
   target[field] = value;
   input.value = formatIntegerInput(value);
 }
@@ -481,6 +732,8 @@ function formatEntitlementLabel(key: string): string {
     automaticReplayEnabled: 'Replay automático',
     cadence: 'Cadência',
     maxMonthlyEvents: 'Eventos mensais',
+    maxAiAnalysisMonthly: 'Análises IA/mês',
+    maxPayloadReplaysMonthly: 'Reprocessamentos manuais/mês',
     maxProjects: 'Projetos',
     maxUsers: 'Usuários',
     planId: 'ID do plano',
@@ -557,6 +810,10 @@ async function copyStoredLicenseKey(licenseKey: string): Promise<void> {
 }
 
 async function openCreateDrawer(): Promise<void> {
+  if (selectedCreatePlan.value) {
+    applyPlanToLimitForm(selectedCreatePlan.value, form);
+  }
+
   createDrawerOpen.value = true;
   await nextTick();
   customerInput.value?.focus();
@@ -572,11 +829,8 @@ async function createLicense(): Promise<void> {
       contractId: form.contractId,
       installationName: form.installationName,
       expiresAt: toEndOfDayIso(form.expiresAt),
-      entitlements: {
-        maxUsers: form.maxUsers,
-        maxProjects: form.maxProjects,
-        aiEnabled: form.aiEnabled,
-      },
+      planId: form.planId,
+      entitlements: form.customLimits ? buildLimitEntitlements(form) : undefined,
     });
 
     await refreshLicenses();
@@ -607,9 +861,20 @@ async function loadDetails(license: LicenseListItem): Promise<void> {
 
   const entitlements = currentLicense.value.entitlements;
   reissueForm.expiresAt = toDateInputValue(new Date(currentLicense.value.expiresAt));
-  reissueForm.maxUsers = Number(entitlements.maxUsers ?? 10);
-  reissueForm.maxProjects = Number(entitlements.maxProjects ?? 3);
-  reissueForm.aiEnabled = Boolean(entitlements.aiEnabled ?? true);
+  reissueForm.planId =
+    typeof entitlements.planId === 'string'
+      ? entitlements.planId
+      : inferPlanIdFromEntitlements(entitlements);
+  reissueForm.customLimits = false;
+
+  const plan = findPlanById(reissueForm.planId);
+
+  if (plan) {
+    applyPlanToLimitForm(plan, reissueForm);
+  } else {
+    applyEntitlementsToLimitForm(entitlements, reissueForm);
+    reissueForm.customLimits = true;
+  }
 }
 
 async function openDetailsDrawer(license: LicenseListItem): Promise<void> {
@@ -632,11 +897,10 @@ async function reissueSelectedLicense(): Promise<void> {
   try {
     currentLicense.value = await reissueLicense(selectedLicense.value.licenseInstanceId, {
       expiresAt: toEndOfDayIso(reissueForm.expiresAt),
-      entitlements: {
-        maxUsers: reissueForm.maxUsers,
-        maxProjects: reissueForm.maxProjects,
-        aiEnabled: reissueForm.aiEnabled,
-      },
+      planId: reissueForm.planId,
+      entitlements: reissueForm.customLimits
+        ? buildLimitEntitlements(reissueForm)
+        : undefined,
     });
 
     if (currentLicense.value.licenseKey) {
@@ -648,5 +912,188 @@ async function reissueSelectedLicense(): Promise<void> {
   } finally {
     reissuing.value = false;
   }
+}
+
+function findPlanById(planId: string): LicensePlan | undefined {
+  return plans.value.find((plan) => plan.id === planId);
+}
+
+function applyPlanToLimitForm(
+  plan: LicensePlan,
+  target: {
+    maxUsers: number;
+    maxProjects: number;
+    maxMonthlyEvents: number;
+    maxAiAnalysisMonthly: number;
+    maxPayloadReplaysMonthly: number;
+    retentionDays: number;
+    aiEnabled: boolean;
+    automaticReplayEnabled: boolean;
+  },
+): void {
+  applyEntitlementsToLimitForm(plan.entitlements, target);
+}
+
+function applyEntitlementsToLimitForm(
+  entitlements: Record<string, boolean | number | string>,
+  target: {
+    maxUsers: number;
+    maxProjects: number;
+    maxMonthlyEvents: number;
+    maxAiAnalysisMonthly: number;
+    maxPayloadReplaysMonthly: number;
+    retentionDays: number;
+    aiEnabled: boolean;
+    automaticReplayEnabled: boolean;
+  },
+): void {
+  target.maxUsers = readLimitForForm(entitlements.maxUsers, 10);
+  target.maxProjects = readLimitForForm(entitlements.maxProjects, 3);
+  target.maxMonthlyEvents = readLimitForForm(entitlements.maxMonthlyEvents, 25000);
+  target.maxAiAnalysisMonthly = readLimitForForm(entitlements.maxAiAnalysisMonthly, 100);
+  target.maxPayloadReplaysMonthly = readLimitForForm(
+    entitlements.maxPayloadReplaysMonthly,
+    30,
+  );
+  target.retentionDays = Number(entitlements.retentionDays ?? 30);
+  target.aiEnabled = Boolean(entitlements.aiEnabled ?? true);
+  target.automaticReplayEnabled = Boolean(
+    entitlements.automaticReplayEnabled ?? false,
+  );
+}
+
+function buildLimitEntitlements(source: {
+  maxUsers: number;
+  maxProjects: number;
+  maxMonthlyEvents: number;
+  maxAiAnalysisMonthly: number;
+  maxPayloadReplaysMonthly: number;
+  retentionDays: number;
+  aiEnabled: boolean;
+  automaticReplayEnabled: boolean;
+}): Record<string, boolean | number | string> {
+  return {
+    maxUsers: serializeLimit(source.maxUsers),
+    maxProjects: serializeLimit(source.maxProjects),
+    maxMonthlyEvents: serializeLimit(source.maxMonthlyEvents),
+    maxAiAnalysisMonthly: serializeLimit(source.maxAiAnalysisMonthly),
+    maxPayloadReplaysMonthly: serializeLimit(source.maxPayloadReplaysMonthly),
+    retentionDays: source.retentionDays,
+    aiEnabled: source.aiEnabled,
+    automaticReplayEnabled: source.automaticReplayEnabled,
+  };
+}
+
+function inferPlanIdFromEntitlements(
+  entitlements: Record<string, boolean | number | string>,
+): string {
+  const matchingPlan = plans.value.find((plan) => {
+    return (
+      Number(plan.entitlements.maxUsers) === Number(entitlements.maxUsers) &&
+      Number(plan.entitlements.maxProjects) === Number(entitlements.maxProjects)
+    );
+  });
+
+  return matchingPlan?.id ?? plans.value[0]?.id ?? '';
+}
+
+function buildPlanPreviewFields(
+  plan: LicensePlan,
+  overrides?: {
+    maxUsers: number;
+    maxProjects: number;
+    maxMonthlyEvents: number;
+    maxAiAnalysisMonthly: number;
+    maxPayloadReplaysMonthly: number;
+    retentionDays: number;
+    aiEnabled: boolean;
+    automaticReplayEnabled: boolean;
+  },
+) {
+  const entitlements = overrides ?? plan.entitlements;
+
+  return [
+    {
+      key: 'maxUsers',
+      label: 'Usuários',
+      value: formatLimit(entitlements.maxUsers),
+    },
+    {
+      key: 'maxProjects',
+      label: 'Projetos',
+      value: formatLimit(entitlements.maxProjects),
+    },
+    {
+      key: 'maxMonthlyEvents',
+      label: 'Eventos/mês',
+      value: formatLimit(entitlements.maxMonthlyEvents),
+    },
+    {
+      key: 'maxAiAnalysisMonthly',
+      label: 'Análises IA/mês',
+      value: formatLimit(entitlements.maxAiAnalysisMonthly),
+    },
+    {
+      key: 'maxPayloadReplaysMonthly',
+      label: 'Replays manuais/mês',
+      value: formatLimit(entitlements.maxPayloadReplaysMonthly),
+    },
+    {
+      key: 'retentionDays',
+      label: 'Retenção',
+      value: `${formatNumber(entitlements.retentionDays)} dias`,
+    },
+    {
+      key: 'aiEnabled',
+      label: 'IA',
+      value: formatEntitlementValue(Boolean(entitlements.aiEnabled)),
+    },
+    {
+      key: 'automaticReplayEnabled',
+      label: 'Replay auto',
+      value: formatEntitlementValue(Boolean(entitlements.automaticReplayEnabled)),
+    },
+  ];
+}
+
+function formatNumber(value: unknown): string {
+  const numberValue = Number(value);
+
+  if (!Number.isFinite(numberValue)) {
+    return '-';
+  }
+
+  return new Intl.NumberFormat('pt-BR').format(numberValue);
+}
+
+function formatLimit(value: unknown): string {
+  if (value === 'unlimited' || value === null) {
+    return 'Ilimitado';
+  }
+
+  return formatNumber(value);
+}
+
+function readLimitForForm(value: unknown, fallback: number): number {
+  if (value === 'unlimited' || value === null) {
+    return 0;
+  }
+
+  const numberValue = Number(value ?? fallback);
+  return Number.isFinite(numberValue) ? numberValue : fallback;
+}
+
+function serializeLimit(value: number): number | string {
+  return value <= 0 ? 'unlimited' : value;
+}
+
+function formatCadence(cadence: LicensePlan['cadence']): string {
+  const labels: Record<LicensePlan['cadence'], string> = {
+    annual: 'anual',
+    contract: 'contrato',
+    monthly: 'mensal',
+  };
+
+  return labels[cadence];
 }
 </script>
