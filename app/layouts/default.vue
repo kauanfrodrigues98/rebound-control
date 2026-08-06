@@ -21,6 +21,11 @@
           Início
         </NuxtLink>
 
+        <NuxtLink class="nav-item" to="/customers">
+          <UIcon class="nav-icon" name="i-lucide-building-2" />
+          Clientes
+        </NuxtLink>
+
         <div class="nav-group" :class="{ expanded: isNavGroupOpen('licensing') }">
           <button
             class="nav-item nav-parent"

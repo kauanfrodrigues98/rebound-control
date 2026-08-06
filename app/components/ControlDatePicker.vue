@@ -4,6 +4,7 @@
       class="control-date-trigger"
       type="button"
       :aria-expanded="open"
+      :disabled="disabled"
       @click="toggle"
     >
       <span :class="{ placeholder: !modelValue }">
@@ -18,6 +19,7 @@
       :name="name"
       :required="required"
       :value="modelValue"
+      :disabled="disabled"
       class="sr-only-date"
       tabindex="-1"
       aria-hidden="true"
@@ -68,10 +70,12 @@ const props = withDefaults(defineProps<{
   modelValue: string
   name?: string
   required?: boolean
+  disabled?: boolean
   placeholder?: string
 }>(), {
   name: undefined,
   required: false,
+  disabled: false,
   placeholder: 'Selecione uma data',
 })
 
@@ -144,6 +148,7 @@ onBeforeUnmount(() => {
 })
 
 function toggle(): void {
+  if (props.disabled) return
   open.value = !open.value
 }
 

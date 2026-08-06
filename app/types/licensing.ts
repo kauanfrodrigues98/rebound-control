@@ -5,7 +5,7 @@ export interface LicenseListItem {
   installationName: string;
   installationFingerprint: string;
   licenseKey?: string;
-  status: 'active' | 'suspended' | 'expired' | string;
+  status: 'active' | 'suspended' | 'expired' | 'revoked' | string;
   version: number;
   issuedAt: string;
   expiresAt: string;

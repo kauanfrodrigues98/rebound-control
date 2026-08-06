@@ -390,6 +390,29 @@ a {
   width: 178px;
 }
 
+.customer-filter {
+  width: 178px;
+}
+
+.customer-toolbar {
+  justify-content: space-between;
+}
+
+.toolbar-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.customer-create-button {
+  flex: 0 0 auto;
+}
+
+.pagination-size-filter {
+  width: 138px;
+}
+
 .activity-range-filter {
   width: 126px;
 }
@@ -430,6 +453,77 @@ a {
   font-size: 13px;
   font-weight: 800;
   padding: 0 14px;
+}
+
+.customer-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(3, 8, 18, 0.66);
+  backdrop-filter: blur(8px);
+}
+
+.customer-drawer-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(100vw, 480px);
+  height: 100vh;
+  border-left: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(18, 24, 36, 0.98), rgba(8, 12, 22, 0.99)),
+    var(--surface);
+  box-shadow: -24px 0 80px rgba(0, 0, 0, 0.42);
+}
+
+.customer-drawer-panel-lg {
+  width: min(100vw, 720px);
+}
+
+.customer-drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid var(--border);
+  padding: 22px 24px;
+}
+
+.customer-drawer-header h2 {
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 850;
+  line-height: 1.15;
+}
+
+.customer-drawer-header p {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.customer-drawer-close {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--muted-strong);
+}
+
+.customer-drawer-close:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--text);
+}
+
+.customer-drawer-body {
+  overflow: auto;
+  padding: 22px 24px 28px;
 }
 
 .metrics-grid {
@@ -1030,6 +1124,21 @@ a {
   box-shadow: 0 0 0 3px rgba(0, 220, 130, 0.1);
 }
 
+.drawer-form input:disabled,
+.drawer-form select:disabled,
+.drawer-form textarea:disabled,
+.control-date-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.drawer-form input:disabled,
+.drawer-form select:disabled,
+.drawer-form textarea:disabled {
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--muted-strong);
+}
+
 .drawer-form select {
   appearance: none;
   background-image:
@@ -1041,6 +1150,167 @@ a {
   background-repeat: no-repeat;
   background-size: 5px 5px;
   padding-right: 34px;
+}
+
+.drawer-section {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.018);
+  padding: 14px;
+}
+
+.drawer-section-heading,
+.contact-form-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.contact-form-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(18, 23, 34, 0.52);
+  padding: 12px;
+}
+
+.contact-form-card-heading strong {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.contract-plan-picker {
+  display: grid;
+  gap: 12px;
+}
+
+.contract-plan-picker-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.contract-plan-picker-heading strong {
+  display: block;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.contract-plan-picker-heading small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.contract-plan-scroll {
+  display: grid;
+  max-height: 430px;
+  gap: 12px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding: 2px 6px 2px 2px;
+  scrollbar-width: thin;
+}
+
+.contract-plan-card {
+  display: grid;
+  align-content: start;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(0, 220, 130, 0.045), transparent 48%),
+    rgba(18, 23, 34, 0.72);
+  color: var(--text);
+  cursor: pointer;
+  gap: 12px;
+  padding: 16px;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.contract-plan-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+  transform: none;
+}
+
+.status-note {
+  border: 1px solid rgba(96, 165, 250, 0.24);
+  border-radius: 8px;
+  background: rgba(96, 165, 250, 0.08);
+  color: var(--muted-strong);
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 10px 12px;
+}
+
+.contract-plan-card:hover,
+.contract-plan-card.selected {
+  border-color: rgba(0, 220, 130, 0.56);
+  background:
+    linear-gradient(135deg, rgba(0, 220, 130, 0.12), transparent 52%),
+    rgba(18, 23, 34, 0.94);
+}
+
+.contract-plan-card:hover {
+  transform: translateY(-1px);
+}
+
+.contract-plan-card.selected {
+  box-shadow: 0 0 0 3px rgba(0, 220, 130, 0.1);
+}
+
+.contract-plan-card-top,
+.contract-plan-limits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.contract-plan-card > strong {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 850;
+  line-height: 1.18;
+}
+
+.contract-plan-card p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.contract-plan-price {
+  color: var(--green);
+  font-size: 18px;
+  font-weight: 850;
+  line-height: 1.1;
+}
+
+.contract-plan-limits small {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--muted-strong);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0 10px;
 }
 
 .control-date-picker {
@@ -1269,6 +1539,68 @@ a {
   margin: 18px 0 0;
 }
 
+.customer-created-license {
+  margin-top: 18px;
+}
+
+.table-action-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.table-action-group .inline-action.secondary {
+  margin-left: 0;
+}
+
+.installation-card-list {
+  display: grid;
+  gap: 12px;
+  padding: 18px 24px 24px;
+}
+
+.installation-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.018);
+  padding: 16px;
+}
+
+.installation-card h3 {
+  margin: 3px 0;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.installation-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.installation-card-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.installation-card-grid div {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px;
+}
+
+.installation-card-grid strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted-strong);
+  font-size: 12px;
+}
+
 .drawer-plan-preview {
   display: grid;
   gap: 12px;
@@ -1339,6 +1671,74 @@ a {
   max-width: 100%;
   scrollbar-color: var(--border-strong) transparent;
   scrollbar-width: thin;
+}
+
+.customer-table-heading {
+  align-items: center;
+}
+
+.table-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-search {
+  position: relative;
+  min-width: min(520px, 100%);
+  flex: 1;
+}
+
+.table-search > svg {
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  color: var(--muted);
+}
+
+.table-search input {
+  width: 100%;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #121722;
+  color: var(--text);
+  outline: none;
+  padding: 0 12px 0 36px;
+}
+
+.table-search input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(0, 220, 130, 0.1);
+}
+
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 62px;
+  padding: 12px 24px;
+}
+
+.pagination-bar p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.pagination-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination-actions span {
+  color: var(--muted-strong);
+  font-size: 13px;
+  font-weight: 750;
 }
 
 .table-wrap::-webkit-scrollbar {
@@ -1441,6 +1841,170 @@ td small {
   display: grid;
   gap: 10px;
   padding: 18px 24px 24px;
+}
+
+.customer-content-grid {
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+}
+
+.customer-stage-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  padding: 18px 24px 24px;
+}
+
+.customer-stage-card {
+  display: grid;
+  min-height: 110px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.018);
+  color: var(--muted-strong);
+  padding: 14px;
+  text-align: left;
+}
+
+.customer-stage-card:hover,
+.customer-stage-card.active {
+  border-color: rgba(0, 220, 130, 0.32);
+  background: rgba(0, 220, 130, 0.08);
+}
+
+.customer-stage-card span {
+  color: var(--muted-strong);
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.customer-stage-card strong {
+  align-self: end;
+  color: var(--text);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.customer-stage-card small {
+  color: var(--muted);
+}
+
+.customer-focus-panel .split-list {
+  padding-top: 18px;
+}
+
+.customer-detail-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 0 24px 24px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 22px 24px;
+  box-shadow: var(--shadow);
+}
+
+.customer-detail-hero h2 {
+  margin: 4px 0;
+  color: var(--text);
+  font-size: 26px;
+}
+
+.customer-detail-hero p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.customer-detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.customer-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 0 24px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.customer-tabs button {
+  min-height: 38px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted-strong);
+  font-weight: 750;
+  padding: 0 10px;
+}
+
+.customer-tabs button:hover,
+.customer-tabs button.active {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.customer-detail-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
+}
+
+.detail-page-timeline {
+  padding-top: 24px;
+}
+
+.nested-panel {
+  box-shadow: none;
+}
+
+.customer-timeline {
+  display: grid;
+  gap: 0;
+  padding: 18px 24px 24px;
+}
+
+.timeline-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 12px;
+  padding-bottom: 18px;
+}
+
+.timeline-item:not(:last-child)::before {
+  position: absolute;
+  top: 16px;
+  bottom: 0;
+  left: 7px;
+  width: 1px;
+  background: var(--border);
+  content: '';
+}
+
+.timeline-dot {
+  position: relative;
+  z-index: 1;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+  border: 3px solid rgba(0, 220, 130, 0.2);
+  border-radius: 999px;
+  background: var(--green);
+}
+
+.timeline-item strong {
+  color: var(--text);
+}
+
+.timeline-item p {
+  margin: 4px 0;
+  color: var(--muted-strong);
+}
+
+.timeline-item small {
+  color: var(--muted);
 }
 
 .list-row {
@@ -1590,6 +2154,21 @@ td small {
     padding: 16px;
   }
 
+  .customer-toolbar,
+  .toolbar-filter-group,
+  .table-controls,
+  .pagination-bar,
+  .pagination-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .toolbar-filter-group,
+  .table-search,
+  .pagination-size-filter {
+    width: 100%;
+  }
+
   .metrics-grid,
   .content-grid,
   .table-panel,
@@ -1609,7 +2188,8 @@ td small {
   .filter-control,
   .date-filter,
   .status-filter,
-  .contract-filter {
+  .contract-filter,
+  .customer-filter {
     width: 100%;
     max-width: none;
   }
@@ -1620,5 +2200,14 @@ td small {
 
   .entitlement-grid {
     grid-template-columns: 1fr;
+  }
+
+  .customer-stage-list {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-drawer-panel,
+  .customer-drawer-panel-lg {
+    width: 100vw;
   }
 }
