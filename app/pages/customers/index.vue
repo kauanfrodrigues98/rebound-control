@@ -43,7 +43,7 @@ import CustomerMetrics from '~/components/customers/CustomerMetrics.vue';
 import CustomerPipeline from '~/components/customers/CustomerPipeline.vue';
 import CustomersTable from '~/components/customers/CustomersTable.vue';
 import type { Cliente } from '~/types/customers';
-import { clonarCliente, slugCliente } from '~/utils/customers';
+import { clonarCliente } from '~/utils/customers';
 
 definePageMeta({
   title: 'Clientes',
@@ -54,9 +54,7 @@ const {
   cardsEtapas,
   clienteEmFoco,
   clienteVazio,
-  clientes,
   clientesFiltrados,
-  clientesPersistidos,
   carregarClientes,
   erroClientes,
   filtroAmbiente,
@@ -98,28 +96,15 @@ onMounted(() => {
 async function salvarCliente(): Promise<void> {
   const payload: Cliente = {
     ...form.value,
-    id:
-      form.value.id && clientesPersistidos.value
-        ? form.value.id
-        : '',
+    id: form.value.id,
     contatos: form.value.contatos.length ? form.value.contatos : [novoContato()],
   };
 
   try {
     await salvarClienteApi(payload);
   } catch {
-    const fallbackPayload = {
-      ...payload,
-      id: form.value.id || `cliente_${slugCliente(form.value.nome) || Date.now()}`,
-    };
-
-    if (clienteEmEdicao.value) {
-      clientes.value = clientes.value.map((cliente) =>
-        cliente.id === clienteEmEdicao.value?.id ? fallbackPayload : cliente,
-      );
-    } else {
-      clientes.value = [fallbackPayload, ...clientes.value];
-    }
+    erroClientes.value = 'Não foi possível salvar o cliente.';
+    return;
   }
 
   cadastroAberto.value = false;

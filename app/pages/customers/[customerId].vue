@@ -346,6 +346,7 @@ const {
   atualizarContratoApi,
   buscarClientePorId,
   carregarClientes,
+  erroClientes,
   emitirLicencaContratoApi,
   novoContato,
 } = useCustomersMock();
@@ -476,7 +477,8 @@ async function salvarContato(): Promise<void> {
     const contato = await adicionarContatoApi(cliente.value.id, contatoForm.value);
     cliente.value.contatos.push(contato);
   } catch {
-    cliente.value.contatos.push({ ...contatoForm.value });
+    erroClientes.value = 'Não foi possível salvar o contato.';
+    return;
   }
 
   contatoDrawerAberto.value = false;
@@ -489,7 +491,8 @@ async function salvarAcao(): Promise<void> {
     const acao = await adicionarTimelineApi(cliente.value.id, acaoForm.value);
     cliente.value.timeline = [acao, ...cliente.value.timeline];
   } catch {
-    cliente.value.timeline = [{ ...acaoForm.value }, ...cliente.value.timeline];
+    erroClientes.value = 'Não foi possível salvar a ação.';
+    return;
   }
 
   acaoDrawerAberto.value = false;
@@ -509,13 +512,8 @@ async function salvarContrato(): Promise<void> {
       cliente.value.contratos = [contrato, ...cliente.value.contratos];
     }
   } catch {
-    if (contratoEmEdicao.value) {
-      cliente.value.contratos = cliente.value.contratos.map((item) =>
-        item.id === contratoForm.value.id ? { ...contratoForm.value } : item,
-      );
-    } else {
-      cliente.value.contratos = [{ ...contratoForm.value }, ...cliente.value.contratos];
-    }
+    erroClientes.value = 'Não foi possível salvar o contrato.';
+    return;
   }
 
   contratoEmEdicao.value = null;

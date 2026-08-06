@@ -22,197 +22,7 @@ export const useCustomersMock = () => {
     preferencia: 'email',
   });
 
-  const clientes = useState<Cliente[]>('customers:mock', () => [
-    {
-      id: 'cliente_acme',
-      nome: 'ACME Pagamentos',
-      tipo: 'cliente',
-      etapa: 'implantacao',
-      razaoSocial: 'ACME Pagamentos S.A.',
-      documento: '',
-      segmento: 'Fintech',
-      site: 'https://acme.example',
-      contatos: [
-        {
-          id: 'contato_acme_1',
-          nome: 'Marina Lopes',
-          email: 'marina@acme.example',
-          telefone: '',
-          cargo: 'Head de Engenharia',
-          papel: 'principal',
-          preferencia: 'email',
-        },
-        {
-          id: 'contato_acme_2',
-          nome: 'Time SRE ACME',
-          email: 'sre@acme.example',
-          telefone: '',
-          cargo: 'Operação',
-          papel: 'tecnico',
-          preferencia: 'call',
-        },
-      ],
-      responsavelComercial: 'Kauan Rodrigues',
-      prioridade: 'alta',
-      valorPrevisto: 'R$ 2.900/mês',
-      ambientePrevisto: 'self-hosted',
-      responsavelTecnico: 'Time SRE ACME',
-      observacoes:
-        'Cliente quer usar Postgres e Redis gerenciados. Precisa de checklist para ingress e secrets.',
-      timeline: [
-        {
-          id: 'timeline_acme_1',
-          tipo: 'implantacao',
-          titulo: 'Validar ambiente Kubernetes',
-          descricao: 'Confirmar ingress, secrets e acesso do control-api público.',
-          data: 'Hoje',
-        },
-        {
-          id: 'timeline_acme_2',
-          tipo: 'contrato',
-          titulo: 'Contrato assinado',
-          descricao: 'Aguardando fechamento dos dados técnicos para instalação.',
-          data: 'Ontem',
-        },
-      ],
-      contratos: [
-        {
-          id: 'contrato_acme_1',
-          codigo: 'CTR-ACME-2026-001',
-          plano: 'Enterprise Self-hosted',
-          planId: '',
-          status: 'ativo',
-          ciclo: 'anual',
-          valorMensal: 'R$ 2.900,00',
-          valorImplantacao: 'R$ 8.000,00',
-          dataInicio: '2026-08-01',
-          dataTermino: '2027-07-31',
-          diaVencimento: '10',
-          formaPagamento: 'Boleto',
-          responsavelAssinatura: 'Marina Lopes',
-          observacoes: 'Contrato usado como referência para instalação self-hosted.',
-        },
-      ],
-    },
-    {
-      id: 'cliente_zenit',
-      nome: 'Zenit Retail',
-      tipo: 'prospect',
-      etapa: 'negociacao',
-      razaoSocial: '',
-      documento: '',
-      segmento: 'Varejo',
-      site: '',
-      contatos: [
-        {
-          id: 'contato_zenit_1',
-          nome: 'Rafael Nunes',
-          email: 'rafael@zenit.example',
-          telefone: '',
-          cargo: 'CTO',
-          papel: 'principal',
-          preferencia: 'email',
-        },
-      ],
-      responsavelComercial: 'Kauan Rodrigues',
-      prioridade: 'media',
-      valorPrevisto: 'R$ 1.400/mês',
-      ambientePrevisto: 'cloud',
-      responsavelTecnico: '',
-      observacoes: 'Quer começar cloud e avaliar self-hosted depois do piloto.',
-      timeline: [
-        {
-          id: 'timeline_zenit_1',
-          tipo: 'proposta',
-          titulo: 'Enviar proposta revisada',
-          descricao: 'Ajustar escopo para piloto cloud de 60 dias.',
-          data: 'Amanhã',
-        },
-      ],
-      contratos: [],
-    },
-    {
-      id: 'cliente_nova',
-      nome: 'Nova Health',
-      tipo: 'lead',
-      etapa: 'prospeccao',
-      razaoSocial: '',
-      documento: '',
-      segmento: 'Healthtech',
-      site: '',
-      contatos: [novoContato()],
-      responsavelComercial: '',
-      prioridade: 'baixa',
-      valorPrevisto: '',
-      ambientePrevisto: 'indefinido',
-      responsavelTecnico: '',
-      observacoes: 'Entrada por indicação. Ainda sem dados comerciais completos.',
-      timeline: [
-        {
-          id: 'timeline_nova_1',
-          tipo: 'ligacao',
-          titulo: 'Mapear decisor técnico',
-          descricao: 'Identificar quem decide arquitetura e compra.',
-          data: 'Sem data',
-        },
-      ],
-      contratos: [],
-    },
-    {
-      id: 'cliente_orion',
-      nome: 'Orion Logistics',
-      tipo: 'cliente',
-      etapa: 'operacao',
-      razaoSocial: 'Orion Logistics Ltda.',
-      documento: '',
-      segmento: 'Logística',
-      site: '',
-      contatos: [
-        {
-          id: 'contato_orion_1',
-          nome: 'Bianca Freitas',
-          email: 'bianca@orion.example',
-          telefone: '',
-          cargo: 'Platform Manager',
-          papel: 'principal',
-          preferencia: 'email',
-        },
-      ],
-      responsavelComercial: 'Kauan Rodrigues',
-      prioridade: 'media',
-      valorPrevisto: 'R$ 3.800/mês',
-      ambientePrevisto: 'hibrido',
-      responsavelTecnico: 'Bianca Freitas',
-      observacoes: 'Conta boa para testar modelo híbrido e futuro módulo de contratos.',
-      timeline: [
-        {
-          id: 'timeline_orion_1',
-          tipo: 'call',
-          titulo: 'Revisar limites do contrato',
-          descricao: 'Avaliar consumo e possíveis limites enterprise.',
-          data: '12 Ago',
-        },
-      ],
-      contratos: [
-        {
-          id: 'contrato_orion_1',
-          codigo: 'CTR-ORION-2026-001',
-          plano: 'Enterprise Híbrido',
-          planId: '',
-          status: 'em_assinatura',
-          ciclo: 'anual',
-          valorMensal: 'R$ 3.800,00',
-          valorImplantacao: 'R$ 12.000,00',
-          dataInicio: '2026-08-15',
-          dataTermino: '2027-08-14',
-          diaVencimento: '15',
-          formaPagamento: 'Transferência',
-          responsavelAssinatura: 'Bianca Freitas',
-          observacoes: 'Aguardando assinatura da versão revisada.',
-        },
-      ],
-    },
-  ]);
+  const clientes = useState<Cliente[]>('customers:items', () => []);
 
   const filtroEtapa = useState<FiltroEtapaCliente>('customers:stage-filter', () => 'todas');
   const filtroAmbiente = useState<FiltroAmbientePrevisto>(
@@ -220,7 +30,6 @@ export const useCustomersMock = () => {
     () => 'todos',
   );
   const carregandoClientes = useState('customers:loading', () => false);
-  const clientesPersistidos = useState('customers:persisted', () => false);
   const erroClientes = useState<string | null>('customers:error', () => null);
 
   const clienteVazio = (): Cliente => ({
@@ -319,11 +128,9 @@ export const useCustomersMock = () => {
     try {
       const response = await $fetch<CustomerApiResponse[]>('/api/customers');
       clientes.value = response.map(apiToCliente);
-      clientesPersistidos.value = true;
     } catch {
-      erroClientes.value =
-        'Não foi possível carregar clientes reais. Exibindo dados mockados.';
-      clientesPersistidos.value = false;
+      clientes.value = [];
+      erroClientes.value = 'Não foi possível carregar clientes.';
     } finally {
       carregandoClientes.value = false;
     }
@@ -344,7 +151,6 @@ export const useCustomersMock = () => {
     clientes.value = cliente.id
       ? clientes.value.map((item) => (item.id === cliente.id ? salvo : item))
       : [salvo, ...clientes.value];
-    clientesPersistidos.value = true;
     return salvo;
   }
 
@@ -429,7 +235,6 @@ export const useCustomersMock = () => {
     clienteVazio,
     clientes,
     clientesFiltrados,
-    clientesPersistidos,
     carregandoClientes,
     carregarClientes,
     erroClientes,
