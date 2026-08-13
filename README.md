@@ -73,3 +73,8 @@ bun run preview
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+
+## License
+
+This project is proprietary software owned by Codify Labs / Rebound DLQ.
+Use, distribution, modification, or redistribution is only allowed under a valid commercial agreement or written permission.

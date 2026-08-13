@@ -2,6 +2,7 @@
   "name": "rebound-control",
   "type": "module",
   "private": true,
+  "license": "UNLICENSED",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
