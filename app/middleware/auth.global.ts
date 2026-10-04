@@ -1,5 +1,5 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (to.path === '/login') return
+  if (to.path === '/login' || to.path === '/financial') return
 
   const { loadCurrentUser } = useControlAuth()
   const user = await loadCurrentUser()

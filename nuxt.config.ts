@@ -5,8 +5,9 @@ export default defineNuxtConfig({
   modules: ['@nuxt/ui'],
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
+    controlFrontendOrigin:
+      process.env.NUXT_CONTROL_FRONTEND_ORIGIN || 'http://localhost:3020',
     controlApiBaseUrl:
-      process.env.NUXT_CONTROL_API_BASE_URL ||
-      'http://localhost:3021/api/v1',
+      process.env.NUXT_CONTROL_API_BASE_URL || 'http://localhost:3021/api/v1',
   },
 })
