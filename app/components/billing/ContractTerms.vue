@@ -81,6 +81,7 @@
         </button>
       </div>
     </div>
+    <BillingContractRecurrence :customer-id="customerId" :contract-id="contract.id" :active="contract.status === 'ativo'" />
     <form
       v-if="canWrite && editable && data"
       class="drawer-form"

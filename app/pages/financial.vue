@@ -75,14 +75,14 @@
         </p>
         <div class="billing-actions">
           <button
-            v-if="session.allowedMethods.includes('card')"
+            v-if="invoiceMethods.includes('card')"
             class="ghost-button"
             :disabled="busy || hasPending"
             @click="checkout('card')"
           >
             Pagar com cartão</button
           ><button
-            v-if="session.allowedMethods.includes('boleto')"
+            v-if="invoiceMethods.includes('boleto')"
             class="ghost-button"
             :disabled="busy || hasPending || !boletoEligible"
             @click="checkout('boleto')"
@@ -91,13 +91,13 @@
           </button>
         </div>
         <p
-          v-if="session.allowedMethods.includes('boleto') && !boletoEligible"
+          v-if="invoiceMethods.includes('boleto') && !boletoEligible"
           class="muted-text"
         >
           Boleto disponível para faturas em BRL com saldo entre R$ 5,00 e R$
           49.999,99.
         </p>
-        <div v-if="session.allowedMethods.includes('external')">
+        <div v-if="invoiceMethods.includes('external')">
           <h3>Pagamento direto</h3>
           <p class="billing-instructions">{{ session.externalInstructions }}</p>
           <p class="muted-text">
@@ -192,6 +192,7 @@ const busy = ref(false),
   error = ref(''),
   page = ref(1),
   hasMore = ref(false)
+const invoiceMethods = computed(() => (session.value?.allowedMethods ?? []).filter(method => !details.value?.invoice.allowedMethods || details.value.invoice.allowedMethods.includes(method)))
 const collectible = computed(
   () =>
     details.value &&

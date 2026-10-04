@@ -7,6 +7,7 @@ export interface FinancialProfile {
   notificationsEnabled: boolean
 }
 export interface BillingInvoice {
+  allowedMethods?: Array<"card" | "boleto" | "external">
   id: string
   number: string
   status: string
