@@ -64,7 +64,7 @@
         </span>
         <strong>{{ plan.name }}</strong>
         <p>{{ plan.description }}</p>
-        <span class="plan-price">{{ plan.priceLabel }}</span>
+        <span class="plan-price">{{ plan.priceLabel }} <small>(referência legada)</small></span>
 
         <div class="plan-limit-strip">
           <span>
@@ -82,6 +82,8 @@
         </div>
       </button>
     </section>
+
+    <PlanPrices v-if="selectedPlan" :key="selectedPlan.id" :plan-id="selectedPlan.id" :active="selectedPlan.active" />
 
     <section class="content-grid plans-content-grid">
       <article class="panel plan-detail-panel">
@@ -178,7 +180,7 @@
             <tr v-for="plan in displayedPlans" :key="plan.id">
               <td>
                 <strong>{{ plan.name }}</strong>
-                <small>{{ plan.priceLabel }}</small>
+                <small>{{ plan.priceLabel }} (referência legada)</small>
               </td>
               <td>
                 <span class="badge" :class="plan.active ? 'active' : 'danger'">
@@ -335,14 +337,8 @@
             />
           </label>
           <label>
-            Preço exibido
-            <input
-              :value="formatBrlInput(issueForm.priceLabel)"
-              autocomplete="off"
-              inputmode="numeric"
-              placeholder="R$ 1.990,00"
-              @input="updateIssueCurrency('priceLabel', $event)"
-            />
+            Referência legada (Licensing)
+            <input :value="issueForm.priceLabel" readonly />
           </label>
         </div>
 
@@ -437,14 +433,9 @@
             </select>
           </label>
           <label>
-            Preço exibido
-            <input
-              :value="formatBrlInput(planForm.priceLabel)"
-              inputmode="numeric"
-              placeholder="R$ 1.990,00"
-              required
-              @input="updatePlanCurrency('priceLabel', $event)"
-            />
+            Referência legada (Licensing)
+            <input :value="planForm.priceLabel" readonly />
+            <small>Configure o preço financeiro na seção Preços do plano após salvar.</small>
           </label>
         </div>
         <div class="form-row">
@@ -570,6 +561,7 @@
 </template>
 
 <script setup lang="ts">
+import PlanPrices from '~/components/billing/PlanPrices.vue';
 import type {
   ActivateLicenseResponse,
   LicensePlan,
@@ -626,7 +618,7 @@ const planForm = reactive({
   description: '',
   cadence: 'monthly' as LicensePlan['cadence'],
   featured: false,
-  priceLabel: '',
+  priceLabel: 'Definido no Billing',
   active: true,
   sortOrder: 10,
   maxUsers: 10,
@@ -649,7 +641,6 @@ type IssueNumberField =
   | 'retentionDays'
   | 'supportSlaHours';
 type PlanNumberField = IssueNumberField | 'sortOrder';
-type PriceLabelField = 'priceLabel';
 
 const {
   data: plansData,
@@ -827,21 +818,6 @@ function updateMaskedNumber(
   input.value = formatIntegerInput(value);
 }
 
-function updateMaskedCurrency(
-  event: Event,
-  setValue: (value: string) => void,
-): void {
-  const input = event.target as HTMLInputElement | null;
-
-  if (!input) {
-    return;
-  }
-
-  const value = formatBrlFromCents(parseMaskedCurrencyToCents(input.value));
-  setValue(value);
-  input.value = value;
-}
-
 function updateIssueNumber(field: IssueNumberField, event: Event, minimum = 1): void {
   updateMaskedNumber(event, (value) => {
     issueForm[field] = value;
@@ -852,18 +828,6 @@ function updatePlanNumber(field: PlanNumberField, event: Event, minimum = 1): vo
   updateMaskedNumber(event, (value) => {
     planForm[field] = value;
   }, minimum);
-}
-
-function updateIssueCurrency(field: PriceLabelField, event: Event): void {
-  updateMaskedCurrency(event, (value) => {
-    issueForm[field] = value;
-  });
-}
-
-function updatePlanCurrency(field: PriceLabelField, event: Event): void {
-  updateMaskedCurrency(event, (value) => {
-    planForm[field] = value;
-  });
 }
 
 function selectPlan(plan: LicensePlan): void {
@@ -1070,7 +1034,7 @@ function resetPlanForm(): void {
   planForm.description = '';
   planForm.cadence = 'monthly';
   planForm.featured = false;
-  planForm.priceLabel = '';
+  planForm.priceLabel = 'Definido no Billing';
   planForm.active = true;
   planForm.sortOrder = (plans.value.length + 1) * 10;
   planForm.maxUsers = 10;

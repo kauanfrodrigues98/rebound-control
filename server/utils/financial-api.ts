@@ -20,6 +20,8 @@ export async function proxyFinancialApi(
   const routes =
     audience === 'billing'
       ? [
+          ['GET', 'plans/[a-zA-Z0-9_-]{1,80}/prices'],
+          ['POST', 'plans/[a-zA-Z0-9_-]{1,80}/prices'],
           ['GET', `customers/${uuid}`],
           ['PUT', `customers/${uuid}/profile`],
           ['POST', `customers/${uuid}/access`],
