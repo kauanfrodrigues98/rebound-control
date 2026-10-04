@@ -183,8 +183,8 @@
               <th>Contrato</th>
               <th>Plano</th>
               <th>Status</th>
-              <th>Valor mensal</th>
-              <th>Implantação</th>
+              <th>Valor mensal original</th>
+              <th>Implantação original</th>
               <th>Vigência</th>
               <th>Pagamento</th>
               <th>Ações</th>
@@ -214,6 +214,7 @@
               </td>
               <td>
                 <div class="table-action-group">
+                  <button class="inline-action secondary" type="button" @click="contratoCondicoesId = contrato.id">Condições comerciais</button>
                   <button
                     v-if="contrato.status === 'ativo'"
                     class="inline-action"
@@ -238,6 +239,7 @@
       <div v-else class="empty-state">
         Nenhum contrato real vinculado ainda.
       </div>
+      <ContractTerms v-if="contratoCondicoes" :key="contratoCondicoes.id" :customer-id="cliente.id" :contract="contratoCondicoes" />
       <div v-if="licencaEmitida" class="created-license customer-created-license">
         <span>Chave emitida para {{ licencaEmitida.licenseInstanceId }}</span>
         <code>{{ licencaEmitida.licenseKey }}</code>
@@ -325,6 +327,7 @@
 </template>
 
 <script setup lang="ts">
+import ContractTerms from '~/components/billing/ContractTerms.vue';
 import CustomerContactDrawer from '~/components/customers/CustomerContactDrawer.vue';
 import CustomerContractDrawer from '~/components/customers/CustomerContractDrawer.vue';
 import CustomerTimelineActionDrawer from '~/components/customers/CustomerTimelineActionDrawer.vue';
@@ -358,6 +361,8 @@ const contatoDrawerAberto = ref(false);
 const acaoDrawerAberto = ref(false);
 const contratoDrawerAberto = ref(false);
 const contratoEmEdicao = ref<ContratoCliente | null>(null);
+const contratoCondicoesId = ref('');
+const contratoCondicoes = computed(() => cliente.value?.contratos.find(item => item.id === contratoCondicoesId.value) ?? null);
 const licencaEmitida = ref<ActivateLicenseResponse | null>(null);
 const {
   data: licensesData,
