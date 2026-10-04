@@ -26,6 +26,7 @@
       <p v-if="error" class="billing-error" role="alert">{{ error }}</p>
     </article>
     <template v-if="overview">
+      <BillingProviderCustomer :base="base" :can-write="canWrite" />
       <BillingFinancialProfileForm
         :key="loadedCustomer"
         :profile="overview.profile"

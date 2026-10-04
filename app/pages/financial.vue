@@ -156,6 +156,7 @@
           Atualizar cobrança
         </button>
       </article>
+      <BillingAutomaticCard v-if="session" />
     </template>
     <p v-else-if="!busy">
       Abra o link pessoal enviado pelo financeiro. Se o acesso expirou, solicite

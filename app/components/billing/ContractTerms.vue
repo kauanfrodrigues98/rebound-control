@@ -52,8 +52,10 @@
           {{ revision.status === "synced" ? "Sincronizada" : "Pendente" }}</span
         >
         <p>{{ revision.terms.reason }}</p>
+        <p v-if="revision.cancelledAt">Revisão cancelada. A sincronização do cancelamento será repetida se necessário.</p>
+        <form v-if="canWrite && !revision.cancelledAt && new Date(revision.terms.effectiveAt).getTime() > Date.now()" @submit.prevent="cancelRevision(revision.id)"><label>Motivo do cancelamento<input v-model.trim="cancellationReasons[revision.id]" required minlength="3" maxlength="1000" :disabled="busy" /></label><button class="ghost-button" :disabled="busy">Cancelar revisão futura</button></form>
         <button
-          v-if="canWrite && revision.status === 'pending'"
+          v-if="canWrite && !revision.cancelledAt && revision.status === 'pending'"
           type="button"
           class="ghost-button"
           :disabled="busy"
@@ -344,6 +346,25 @@ const priceOptions = computed(() => {
     })
   return options
 })
+const cancellationReasons=reactive<Record<string,string>>({})
+async function cancelRevision(id: string) {
+  if (busy.value) return
+  syncing.value = true
+  error.value = ""
+  try {
+    await $fetch(`${path.value}/${id}/cancel`, {
+      method: "POST",
+      body: { reason: cancellationReasons[id] }
+    })
+    message.value = "Revisão futura cancelada no Control; sincronização com Billing registrada."
+    await load()
+  } catch {
+    error.value = "Não foi possível cancelar. Somente revisões futuras podem ser canceladas."
+  } finally {
+    syncing.value = false
+  }
+}
+
 let attempt: { hash: string; key: string } | null = null
 function dateTime(value: string) {
   return (

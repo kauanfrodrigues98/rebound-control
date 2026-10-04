@@ -19,6 +19,7 @@ export interface ContractTerms {
   entitlements: Record<string, boolean | number | string>
 }
 export interface ContractRevision {
+  cancelledAt?: string | null
   id: string
   sourceVersion: number
   terms: ContractTerms

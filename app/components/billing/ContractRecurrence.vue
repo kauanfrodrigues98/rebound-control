@@ -1,7 +1,8 @@
 <template>
   <section class="recurrence">
     <h3>Faturamento recorrente</h3>
-    <p class="muted-text">A ativação define a primeira competência. Cada ciclo gera uma fatura; o cliente paga pelos meios acordados. Não há débito automático no cartão nesta etapa.</p>
+    <BillingContractFinancialState :customer-id="customerId" :contract-id="contractId" />
+    <p class="muted-text">A ativação define a primeira competência. Cada ciclo gera uma fatura; o cliente paga pelos meios acordados. O débito automático depende da autorização de cartão no portal financeiro.</p>
     <p v-if="error" role="alert" class="status-banner">{{ error }}</p>
     <p v-if="message" role="status">{{ message }}</p>
     <button type="button" class="ghost-button" :disabled="busy" @click="load">Atualizar recorrência</button>
