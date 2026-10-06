@@ -1,6 +1,6 @@
 <template>
   <section class="toolbar">
-    <button class="ghost-button" type="button" @click="refreshLicenses">
+    <button class="ghost-button" type="button" @click="refreshLicenses()">
       Atualizar
     </button>
     <button class="primary-action-button" type="button" @click="openCreateDrawer">
@@ -661,8 +661,9 @@ watch(
       return;
     }
 
-    const defaultPlanId =
-      currentPlans.find((plan) => plan.featured)?.id ?? currentPlans[0].id;
+    const defaultPlan = currentPlans.find((plan) => plan.featured) ?? currentPlans[0];
+    if (!defaultPlan) return;
+    const defaultPlanId = defaultPlan.id;
 
     if (!form.planId) {
       form.planId = defaultPlanId;

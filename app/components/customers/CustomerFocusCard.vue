@@ -11,7 +11,7 @@
         <div>
           <strong>{{ cliente.timeline[0]?.titulo ?? 'Nenhuma ação agendada' }}</strong>
           <p class="muted-text">
-            {{ cliente.timeline[0]?.data ?? 'Sem data' }}
+            {{ cliente.timeline[0]?.data ? formatDate(cliente.timeline[0].data) : 'Sem data' }}
           </p>
         </div>
       </div>
@@ -35,6 +35,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatDate } from "~/utils/date";
 import type { Cliente } from '~/types/customers';
 import { formatarPrioridadeCliente, tomPrioridadeCliente } from '~/utils/customers';
 

@@ -27,6 +27,7 @@ export interface LicensePlanPayload {
   name: string;
   description: string;
   cadence: LicensePlan['cadence'];
+  deployment: LicensePlan['deployment'];
   featured: boolean;
   priceLabel: string;
   entitlements: Record<string, boolean | number | string>;

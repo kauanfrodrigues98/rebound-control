@@ -5,10 +5,12 @@
         <span>Comunicações</span>
         <h2>Última comunicação conhecida</h2>
       </div>
-      <button type="button" @click="refreshLicenses">Atualizar</button>
+      <button type="button" @click="refreshLicenses()">Atualizar</button>
     </div>
 
-    <div class="table-wrap">
+    <p v-if="error" class="status-banner" role="alert">Não foi possível carregar as comunicações. Tente novamente.</p>
+    <p v-if="pending" class="empty-state" role="status">Carregando comunicações...</p>
+    <div v-else class="table-wrap">
       <table>
         <thead>
           <tr>
@@ -34,7 +36,7 @@
               </span>
             </td>
           </tr>
-          <tr v-if="!licenses.length && !pending">
+          <tr v-if="!licenses.length && !pending && !error">
             <td colspan="5">
               <div class="empty-state">Nenhuma comunicação encontrada.</div>
             </td>
@@ -55,6 +57,7 @@ const { getLicenseHealth, listLicenses } = useLicenses();
 const {
   data,
   pending,
+  error,
   refresh: refreshLicenses,
 } = await listLicenses();
 const licenses = computed(() => data.value?.licenses ?? []);

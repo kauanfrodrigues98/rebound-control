@@ -3,6 +3,9 @@ export function formatDate(value?: string): string {
     return '-';
   }
 
+  const calendarDate = formatCalendarDate(value);
+  if (calendarDate) return calendarDate;
+
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit',
     month: '2-digit',
@@ -29,4 +32,9 @@ export function toDateInputValue(date: Date): string {
 
 export function toEndOfDayIso(dateInput: string): string {
   return new Date(`${dateInput}T23:59:59.000Z`).toISOString();
+}
+
+export function formatCalendarDate(value: string): string | null {
+  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  return parts ? `${parts[3]}/${parts[2]}/${parts[1]}` : null;
 }

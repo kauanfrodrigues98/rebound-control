@@ -26,7 +26,10 @@
           Clientes
         </NuxtLink>
 
-        <div class="nav-group" :class="{ expanded: isNavGroupOpen('licensing') }">
+        <div
+          class="nav-group"
+          :class="{ expanded: isNavGroupOpen('licensing') }"
+        >
           <button
             class="nav-item nav-parent"
             :class="{ 'active-strong': route.path.startsWith('/licensing') }"
@@ -35,7 +38,12 @@
           >
             <UIcon class="nav-icon" name="i-lucide-key-round" />
             Licenciamento
-            <UBadge class="nav-badge" color="primary" size="xs" variant="subtle">
+            <UBadge
+              class="nav-badge"
+              color="primary"
+              size="xs"
+              variant="subtle"
+            >
               3
             </UBadge>
             <UIcon
@@ -60,6 +68,8 @@
           </div>
         </div>
 
+        <NuxtLink class="nav-item" to="/requests" :class="{ 'active-strong': route.path.startsWith('/requests') }"><UIcon class="nav-icon" name="i-lucide-inbox" />Solicitações</NuxtLink>
+
         <div class="nav-group" :class="{ expanded: isNavGroupOpen('billing') }">
           <button
             class="nav-item nav-parent"
@@ -69,8 +79,13 @@
           >
             <UIcon class="nav-icon" name="i-lucide-credit-card" />
             Cobrança
-            <UBadge class="nav-badge" color="neutral" size="xs" variant="subtle">
-              em breve
+            <UBadge
+              class="nav-badge"
+              color="primary"
+              size="xs"
+              variant="subtle"
+            >
+              2
             </UBadge>
             <UIcon
               class="chevron"
@@ -81,7 +96,7 @@
               "
             />
           </button>
-          <div class="nav-submenu muted">
+          <div class="nav-submenu">
             <NuxtLink class="nav-subitem" to="/billing/contracts">
               Contratos
             </NuxtLink>
@@ -91,7 +106,10 @@
           </div>
         </div>
 
-        <div class="nav-group" :class="{ expanded: isNavGroupOpen('telemetry') }">
+        <div
+          class="nav-group"
+          :class="{ expanded: isNavGroupOpen('telemetry') }"
+        >
           <button
             class="nav-item nav-parent"
             :class="{ 'active-strong': route.path.startsWith('/telemetry') }"
@@ -100,8 +118,13 @@
           >
             <UIcon class="nav-icon" name="i-lucide-activity" />
             Telemetria
-            <UBadge class="nav-badge" color="neutral" size="xs" variant="subtle">
-              em breve
+            <UBadge
+              class="nav-badge"
+              color="primary"
+              size="xs"
+              variant="subtle"
+            >
+              2
             </UBadge>
             <UIcon
               class="chevron"
@@ -112,7 +135,7 @@
               "
             />
           </button>
-          <div class="nav-submenu muted">
+          <div class="nav-submenu">
             <NuxtLink class="nav-subitem" to="/telemetry/check-ins">
               Comunicações
             </NuxtLink>
@@ -122,7 +145,10 @@
           </div>
         </div>
 
-        <div class="nav-group" :class="{ expanded: isNavGroupOpen('settings') }">
+        <div
+          class="nav-group"
+          :class="{ expanded: isNavGroupOpen('settings') }"
+        >
           <button
             class="nav-item nav-parent"
             :class="{ 'active-strong': route.path.startsWith('/settings') }"
@@ -131,8 +157,13 @@
           >
             <UIcon class="nav-icon" name="i-lucide-settings" />
             Configurações
-            <UBadge class="nav-badge" color="neutral" size="xs" variant="subtle">
-              em breve
+            <UBadge
+              class="nav-badge"
+              color="primary"
+              size="xs"
+              variant="subtle"
+            >
+              1
             </UBadge>
             <UIcon
               class="chevron"
@@ -144,15 +175,15 @@
             />
           </button>
           <div class="nav-submenu">
-            <NuxtLink class="nav-subitem" to="/settings/general">
-              Geral
-            </NuxtLink>
-            <NuxtLink class="nav-subitem" to="/settings/members">
-              Membros
-            </NuxtLink>
-            <NuxtLink class="nav-subitem" to="/settings/notifications">
-              Notificações
-            </NuxtLink>
+            <span class="nav-subitem pending-nav" aria-disabled="true"
+              >Geral<small>em breve</small></span
+            >
+            <span class="nav-subitem pending-nav" aria-disabled="true"
+              >Membros<small>em breve</small></span
+            >
+            <span class="nav-subitem pending-nav" aria-disabled="true"
+              >Notificações<small>em breve</small></span
+            >
             <NuxtLink class="nav-subitem" to="/settings/security">
               Segurança
             </NuxtLink>
@@ -170,8 +201,8 @@
           <button class="profile" type="button" :aria-expanded="userMenuOpen">
             <UAvatar alt="Rebound Admin" size="xs" text="RC" />
             <div>
-            <strong>{{ user?.name || 'Rebound Admin' }}</strong>
-            <span>{{ user?.email || 'Console interno' }}</span>
+              <strong>{{ user?.name || 'Rebound Admin' }}</strong>
+              <span>{{ user?.email || 'Console interno' }}</span>
             </div>
             <UIcon
               class="profile-chevron"
@@ -221,47 +252,16 @@ const pageTitle = computed(() => routeMeta.value.title);
 const titleInitial = computed(() => pageTitle.value.slice(0, 1).toUpperCase());
 
 const userMenuItems = computed<DropdownMenuItem[][]>(() => [
+  [{ label: user.value?.name || 'Minha conta', type: 'label' }],
   [
+    { label: 'Minha sessão', icon: 'i-lucide-user', to: '/settings/security' },
     {
-      label: 'Rebound Admin',
-      avatar: { text: 'RC' },
-      type: 'label',
+      label: 'Faturas e recebimentos',
+      icon: 'i-lucide-credit-card',
+      to: '/billing/invoices',
     },
   ],
-  [
-    { label: 'Perfil', icon: 'i-lucide-user' },
-    { label: 'Cobrança', icon: 'i-lucide-credit-card' },
-    { label: 'Configurações', icon: 'i-lucide-settings' },
-  ],
-  [
-    {
-      label: 'Tema',
-      icon: 'i-lucide-palette',
-      children: [
-        { label: 'Escuro', icon: 'i-lucide-moon' },
-        { label: 'Claro', icon: 'i-lucide-sun' },
-      ],
-    },
-    {
-      label: 'Aparência',
-      icon: 'i-lucide-swatch-book',
-      children: [{ label: 'Compacto' }, { label: 'Confortável' }],
-    },
-    {
-      label: 'Modelos',
-      icon: 'i-lucide-layout-template',
-      children: [{ label: 'Painel' }, { label: 'Painel de controle' }],
-    },
-  ],
-  [
-    { label: 'Documentação', icon: 'i-lucide-book-open' },
-    { label: 'Repositório GitHub', icon: 'i-lucide-github' },
-    {
-      label: 'Sair',
-      icon: 'i-lucide-log-out',
-      onSelect: handleLogout,
-    },
-  ],
+  [{ label: 'Sair', icon: 'i-lucide-log-out', onSelect: handleLogout }],
 ]);
 
 const { user, logout } = useControlAuth();
@@ -301,3 +301,18 @@ async function handleLogout(): Promise<void> {
   await logout();
 }
 </script>
+
+<style scoped>
+.pending-nav {
+  justify-content: space-between;
+  gap: 8px;
+  opacity: 0.55;
+  cursor: default;
+}
+.pending-nav small {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: var(--surface-soft);
+  border-radius: 4px;
+}
+</style>

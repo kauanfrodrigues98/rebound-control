@@ -4,11 +4,13 @@
       <div class="panel-heading">
         <div>
           <span>Eventos</span>
-          <h2>Eventos operacionais do licenciamento</h2>
+          <h2>Resumo de eventos do licenciamento</h2><p class="muted-text">Emissões e última comunicação de cada instalação. Esta consulta não é um histórico completo de auditoria.</p>
         </div>
+        <button class="ghost-button" :disabled="pending" @click="refresh()">Atualizar</button>
       </div>
-
-      <div class="split-list">
+      <p v-if="error" class="status-banner" role="alert">Não foi possível carregar os eventos. Tente novamente.</p>
+      <p v-if="pending" class="empty-state" role="status">Carregando eventos...</p>
+      <div v-else class="split-list">
         <div v-for="event in events" :key="event.id" class="list-row">
           <div>
             <strong>{{ event.title }}</strong>
@@ -16,7 +18,7 @@
           </div>
           <span class="badge neutral">{{ event.date }}</span>
         </div>
-        <div v-if="!events.length" class="empty-state">
+        <div v-if="!events.length && !error" class="empty-state">
           Nenhum evento operacional disponível.
         </div>
       </div>
@@ -31,7 +33,7 @@ definePageMeta({
 });
 
 const { listLicenses } = useLicenses();
-const { data } = await listLicenses();
+const { data, pending, error, refresh } = await listLicenses();
 const licenses = computed(() => data.value?.licenses ?? []);
 const events = computed(() =>
   licenses.value.flatMap((license) => [

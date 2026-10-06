@@ -3,46 +3,72 @@
     <article class="panel">
       <div class="panel-heading">
         <div>
-          <span>Segurança</span>
-          <h2>Postura de segurança do painel</h2>
+          <span>Minha conta</span>
+          <h2>Sessão e segurança</h2>
+          <p>Informações do acesso atual ao Control.</p>
         </div>
       </div>
       <div class="split-list">
         <div class="list-row">
           <div>
-            <strong>Proxy no servidor</strong>
-            <p class="muted-text">
-              Todas as chamadas administrativas passam pelo servidor do Nuxt.
-            </p>
+            <strong>{{ user?.name }}</strong>
+            <p class="muted-text">{{ user?.email }}</p>
           </div>
-          <span class="badge active">habilitado</span>
+          <span class="badge active">{{
+            user?.role === 'admin' ? 'Administrador' : 'Usuário'
+          }}</span>
         </div>
         <div class="list-row">
           <div>
-              <strong>Chave administrativa no navegador</strong>
+            <strong>Sessão persistente</strong>
             <p class="muted-text">
-              A chave não é serializada para o cliente.
+              Recarregar a página mantém o acesso enquanto a sessão puder ser
+              renovada. Sair encerra sua sessão.
             </p>
           </div>
-          <span class="badge active">bloqueada</span>
+          <span class="badge active">Ativa</span>
         </div>
         <div class="list-row">
           <div>
-            <strong>Login do painel</strong>
+            <strong>Renovação automática</strong>
             <p class="muted-text">
-              Ainda não implementado porque esta fase é validação interna.
+              Quando o acesso expira, o painel tenta renová-lo. Se a sessão não
+              for mais válida, solicita um novo login.
             </p>
           </div>
-          <span class="badge warning">próximo</span>
+          <span class="badge active">Habilitada</span>
+        </div>
+        <div class="list-row">
+          <div>
+            <strong>Proteção das credenciais</strong>
+            <p class="muted-text">
+              Tokens ficam em cookies protegidos. Chaves dos serviços permanecem
+              no servidor.
+            </p>
+          </div>
+          <span class="badge neutral">Protegida</span>
         </div>
       </div>
     </article>
   </section>
 </template>
-
 <script setup lang="ts">
-definePageMeta({
-  title: 'Segurança',
-  eyebrow: 'Configurações',
-});
+definePageMeta({ title: 'Sessão e segurança', eyebrow: 'Configurações' });
+const { user } = useControlAuth();
 </script>
+<style scoped>
+h2 {
+  color: var(--text);
+}
+.panel-heading p {
+  margin-top: 8px;
+  font-size: 13px;
+}
+.list-row {
+  gap: 16px;
+}
+.muted-text {
+  max-width: 680px;
+  line-height: 1.6;
+}
+</style>

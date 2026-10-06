@@ -60,7 +60,7 @@
             <td>{{ cliente.responsavelComercial || 'Não definido' }}</td>
             <td>
               <strong>{{ cliente.timeline[0]?.titulo || 'Sem histórico' }}</strong>
-              <small>{{ cliente.timeline[0]?.data || 'Sem data' }}</small>
+              <small>{{ cliente.timeline[0]?.data ? formatDate(cliente.timeline[0].data) : 'Sem data' }}</small>
             </td>
             <td>
               <NuxtLink class="inline-action" :to="`/customers/${cliente.id}`">
@@ -110,6 +110,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatDate } from "~/utils/date";
 import type { Cliente } from '~/types/customers';
 import {
   contatoPrincipal,

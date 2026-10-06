@@ -28,7 +28,7 @@
     <section class="plans-hero">
       <article class="plans-hero-main">
         <span class="eyebrow">Planos cadastrados</span>
-        <h2>Limites usados para emitir licenças auto-hospedadas</h2>
+        <h2>Planos e limites para Cloud e self-hosted</h2>
         <p>
           Cadastre, edite e arquive planos diretamente no serviço de licenciamento.
           Emissão e renovação usam estes limites como fonte de verdade.
@@ -58,13 +58,14 @@
         @click="selectPlan(plan)"
       >
         <span class="plan-card-topline">
+          <span class="badge neutral">{{ plan.deployment === 'cloud' ? 'Cloud' : 'Self-hosted' }}</span>
           <span class="badge neutral">{{ formatCadence(plan.cadence) }}</span>
           <span v-if="!plan.active" class="badge danger">arquivado</span>
           <UIcon v-if="plan.featured" name="i-lucide-sparkles" />
         </span>
         <strong>{{ plan.name }}</strong>
         <p>{{ plan.description }}</p>
-        <span class="plan-price">{{ plan.priceLabel }}</span>
+        <span class="plan-price">{{ plan.priceLabel }} <small>(referência legada)</small></span>
 
         <div class="plan-limit-strip">
           <span>
@@ -82,6 +83,8 @@
         </div>
       </button>
     </section>
+
+    <PlanPrices v-if="selectedPlan" :key="selectedPlan.id" :plan-id="selectedPlan.id" :plan-name="selectedPlan.name" :deployment="selectedPlan.deployment ?? 'self_hosted'" :active="selectedPlan.active" />
 
     <section class="content-grid plans-content-grid">
       <article class="panel plan-detail-panel">
@@ -178,7 +181,7 @@
             <tr v-for="plan in displayedPlans" :key="plan.id">
               <td>
                 <strong>{{ plan.name }}</strong>
-                <small>{{ plan.priceLabel }}</small>
+                <small>{{ plan.priceLabel }} (referência legada)</small>
               </td>
               <td>
                 <span class="badge" :class="plan.active ? 'active' : 'danger'">
@@ -335,14 +338,8 @@
             />
           </label>
           <label>
-            Preço exibido
-            <input
-              :value="formatBrlInput(issueForm.priceLabel)"
-              autocomplete="off"
-              inputmode="numeric"
-              placeholder="R$ 1.990,00"
-              @input="updateIssueCurrency('priceLabel', $event)"
-            />
+            Referência legada (Licensing)
+            <input :value="issueForm.priceLabel" readonly />
           </label>
         </div>
 
@@ -429,6 +426,13 @@
         </label>
         <div class="form-row">
           <label>
+            Ambiente
+            <select v-model="planForm.deployment" required>
+              <option value="cloud">Cloud</option>
+              <option value="self_hosted">Self-hosted</option>
+            </select>
+          </label>
+          <label>
             Cadência
             <select v-model="planForm.cadence" required>
               <option value="monthly">Mensal</option>
@@ -437,14 +441,9 @@
             </select>
           </label>
           <label>
-            Preço exibido
-            <input
-              :value="formatBrlInput(planForm.priceLabel)"
-              inputmode="numeric"
-              placeholder="R$ 1.990,00"
-              required
-              @input="updatePlanCurrency('priceLabel', $event)"
-            />
+            Referência legada (Licensing)
+            <input :value="planForm.priceLabel" readonly />
+            <small>Configure o preço financeiro na seção Preços do plano após salvar.</small>
           </label>
         </div>
         <div class="form-row">
@@ -570,6 +569,7 @@
 </template>
 
 <script setup lang="ts">
+import PlanPrices from '~/components/billing/PlanPrices.vue';
 import type {
   ActivateLicenseResponse,
   LicensePlan,
@@ -625,8 +625,9 @@ const planForm = reactive({
   name: '',
   description: '',
   cadence: 'monthly' as LicensePlan['cadence'],
+  deployment: 'self_hosted' as LicensePlan['deployment'],
   featured: false,
-  priceLabel: '',
+  priceLabel: 'Definido no Billing',
   active: true,
   sortOrder: 10,
   maxUsers: 10,
@@ -649,7 +650,6 @@ type IssueNumberField =
   | 'retentionDays'
   | 'supportSlaHours';
 type PlanNumberField = IssueNumberField | 'sortOrder';
-type PriceLabelField = 'priceLabel';
 
 const {
   data: plansData,
@@ -795,11 +795,12 @@ const plansErrorMessage = computed(() => {
 watch(
   plans,
   (currentPlans) => {
-  if (!selectedPlanId.value && currentPlans.length) {
+    const firstPlan = currentPlans[0];
+    if (!selectedPlanId.value && firstPlan) {
       selectedPlanId.value =
         currentPlans.find((plan) => plan.active && plan.featured)?.id ??
         currentPlans.find((plan) => plan.active)?.id ??
-        currentPlans[0].id;
+        firstPlan.id;
     }
   },
   { immediate: true },
@@ -827,21 +828,6 @@ function updateMaskedNumber(
   input.value = formatIntegerInput(value);
 }
 
-function updateMaskedCurrency(
-  event: Event,
-  setValue: (value: string) => void,
-): void {
-  const input = event.target as HTMLInputElement | null;
-
-  if (!input) {
-    return;
-  }
-
-  const value = formatBrlFromCents(parseMaskedCurrencyToCents(input.value));
-  setValue(value);
-  input.value = value;
-}
-
 function updateIssueNumber(field: IssueNumberField, event: Event, minimum = 1): void {
   updateMaskedNumber(event, (value) => {
     issueForm[field] = value;
@@ -852,18 +838,6 @@ function updatePlanNumber(field: PlanNumberField, event: Event, minimum = 1): vo
   updateMaskedNumber(event, (value) => {
     planForm[field] = value;
   }, minimum);
-}
-
-function updateIssueCurrency(field: PriceLabelField, event: Event): void {
-  updateMaskedCurrency(event, (value) => {
-    issueForm[field] = value;
-  });
-}
-
-function updatePlanCurrency(field: PriceLabelField, event: Event): void {
-  updateMaskedCurrency(event, (value) => {
-    planForm[field] = value;
-  });
 }
 
 function selectPlan(plan: LicensePlan): void {
@@ -1022,6 +996,7 @@ function buildPlanPayload(): LicensePlanPayload {
     name: planForm.name,
     description: planForm.description,
     cadence: planForm.cadence,
+    deployment: planForm.deployment,
     featured: planForm.featured,
     priceLabel: planForm.priceLabel,
     active: planForm.active,
@@ -1046,6 +1021,7 @@ function fillPlanForm(plan: LicensePlan): void {
   planForm.name = plan.name;
   planForm.description = plan.description;
   planForm.cadence = plan.cadence;
+  planForm.deployment = plan.deployment ?? 'self_hosted';
   planForm.featured = plan.featured;
   planForm.priceLabel = plan.priceLabel;
   planForm.active = plan.active;
@@ -1069,8 +1045,9 @@ function resetPlanForm(): void {
   planForm.name = '';
   planForm.description = '';
   planForm.cadence = 'monthly';
+  planForm.deployment = 'self_hosted';
   planForm.featured = false;
-  planForm.priceLabel = '';
+  planForm.priceLabel = 'Definido no Billing';
   planForm.active = true;
   planForm.sortOrder = (plans.value.length + 1) * 10;
   planForm.maxUsers = 10;

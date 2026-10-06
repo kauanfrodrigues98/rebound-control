@@ -160,13 +160,13 @@
           <div>
             <strong>{{ item.titulo }}</strong>
             <p>{{ item.descricao }}</p>
-            <small>{{ item.data }} · {{ formatarTipoTimelineCliente(item.tipo) }}</small>
+            <small>{{ formatDate(item.data) }} · {{ formatarTipoTimelineCliente(item.tipo) }}</small>
           </div>
         </div>
       </div>
       </section>
 
-      <section v-if="abaSelecionada === 'contratos'" class="panel table-panel">
+      <section v-if="abaSelecionada === 'contratos'" class="panel table-panel contracts-panel">
       <div class="panel-heading">
         <div>
           <span>Contratos</span>
@@ -181,10 +181,10 @@
           <thead>
             <tr>
               <th>Contrato</th>
-              <th>Plano</th>
+              <th>Plano vigente</th>
               <th>Status</th>
-              <th>Valor mensal</th>
-              <th>Implantação</th>
+              <th>Valor mensal original</th>
+              <th>Implantação original</th>
               <th>Vigência</th>
               <th>Pagamento</th>
               <th>Ações</th>
@@ -196,7 +196,7 @@
                 <strong>{{ contrato.codigo }}</strong>
                 <small>{{ formatarCicloContratoCliente(contrato.ciclo) }}</small>
               </td>
-              <td>{{ contrato.plano }}</td>
+              <td>{{ contrato.planoVigente ?? contrato.plano }}</td>
               <td>
                 <span class="badge" :class="tomStatusContratoCliente(contrato.status)">
                   {{ formatarStatusContratoCliente(contrato.status) }}
@@ -205,8 +205,8 @@
               <td>{{ contrato.valorMensal || 'Pendente' }}</td>
               <td>{{ contrato.valorImplantacao || 'Pendente' }}</td>
               <td>
-                <strong>{{ contrato.dataInicio || 'Início pendente' }}</strong>
-                <small>{{ contrato.dataTermino || 'sem término definido' }}</small>
+                <strong>{{ contrato.dataInicio ? formatDate(contrato.dataInicio) : 'Início pendente' }}</strong>
+                <small>{{ contrato.dataTermino ? formatDate(contrato.dataTermino) : 'sem término definido' }}</small>
               </td>
               <td>
                 <strong>{{ contrato.formaPagamento || 'Não definido' }}</strong>
@@ -214,6 +214,7 @@
               </td>
               <td>
                 <div class="table-action-group">
+                  <button class="inline-action secondary" type="button" @click="contratoCondicoesId = contrato.id">Condições comerciais</button>
                   <button
                     v-if="contrato.status === 'ativo'"
                     class="inline-action"
@@ -238,6 +239,7 @@
       <div v-else class="empty-state">
         Nenhum contrato real vinculado ainda.
       </div>
+      <ContractTerms v-if="contratoCondicoes" :key="contratoCondicoes.id" :customer-id="cliente.id" :contract="contratoCondicoes" />
       <div v-if="licencaEmitida" class="created-license customer-created-license">
         <span>Chave emitida para {{ licencaEmitida.licenseInstanceId }}</span>
         <code>{{ licencaEmitida.licenseKey }}</code>
@@ -251,7 +253,7 @@
           <span>Instalações</span>
           <h2>Licenças e ambientes vinculados</h2>
         </div>
-        <button class="ghost-button" type="button" @click="refreshLicenses">
+        <button class="ghost-button" type="button" @click="refreshLicenses()">
           Atualizar
         </button>
       </div>
@@ -325,6 +327,8 @@
 </template>
 
 <script setup lang="ts">
+import { formatDate } from "~/utils/date";
+import ContractTerms from '~/components/billing/ContractTerms.vue';
 import CustomerContactDrawer from '~/components/customers/CustomerContactDrawer.vue';
 import CustomerContractDrawer from '~/components/customers/CustomerContractDrawer.vue';
 import CustomerTimelineActionDrawer from '~/components/customers/CustomerTimelineActionDrawer.vue';
@@ -358,6 +362,8 @@ const contatoDrawerAberto = ref(false);
 const acaoDrawerAberto = ref(false);
 const contratoDrawerAberto = ref(false);
 const contratoEmEdicao = ref<ContratoCliente | null>(null);
+const contratoCondicoesId = ref('');
+const contratoCondicoes = computed(() => cliente.value?.contratos.find(item => item.id === contratoCondicoesId.value) ?? null);
 const licencaEmitida = ref<ActivateLicenseResponse | null>(null);
 const {
   data: licensesData,
@@ -565,3 +571,14 @@ function formatarDataHoraLicenca(value?: string): string {
   }).format(new Date(value));
 }
 </script>
+
+<style scoped>
+.contracts-panel > .panel-heading h2 {
+  color: var(--text);
+}
+.contracts-panel :deep(.inline-action) {
+  white-space: nowrap;
+  height: auto;
+  min-height: 30px;
+}
+</style>
