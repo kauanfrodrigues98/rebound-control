@@ -174,114 +174,116 @@
   </section>
 </template>
 <script setup lang="ts">
-import type { BillingOverview, InvoiceDetails } from '~/types/billing'
-import { billingDate, billingMoney, billingStatus } from '~/utils/billing'
-definePageMeta({ title: 'Faturas', eyebrow: 'Cobrança' })
-const { clientes, carregarClientes } = useCustomersMock()
-const { user } = useControlAuth()
-const canWrite = computed(() => user.value?.role === 'admin')
-const route = useRoute()
+import type { BillingOverview, InvoiceDetails } from '~/types/billing';
+import { billingDate, billingMoney, billingStatus } from '~/utils/billing';
+definePageMeta({ title: 'Faturas', eyebrow: 'Cobrança' });
+const { clientes, carregarClientes } = useCustomersMock();
+const { user } = useControlAuth();
+const canWrite = computed(() => user.value?.role === 'admin');
+const route = useRoute();
 const customerId = ref(
   typeof route.query.customerId === 'string' ? route.query.customerId : '',
-)
+);
 const loadedCustomer = ref(''),
   page = ref(1),
   busy = ref(false),
   error = ref(''),
-  accessUrl = ref('')
+  accessUrl = ref('');
 const overview = ref<BillingOverview | null>(null),
-  details = ref<InvoiceDetails | null>(null)
-const base = computed(() => `/api/billing/customers/${loadedCustomer.value}`)
+  details = ref<InvoiceDetails | null>(null);
+const base = computed(() => `/api/billing/customers/${loadedCustomer.value}`);
 onMounted(async () => {
-  await carregarClientes()
-  if (customerId.value) await load()
-})
+  await carregarClientes();
+  if (customerId.value) await load();
+});
 watch(customerId, () => {
-  overview.value = null
-  details.value = null
-  accessUrl.value = ''
-  loadedCustomer.value = ''
-  page.value = 1
-})
+  overview.value = null;
+  details.value = null;
+  accessUrl.value = '';
+  loadedCustomer.value = '';
+  page.value = 1;
+});
 async function load() {
-  if (busy.value || !customerId.value) return
-  busy.value = true
-  error.value = ''
+  if (busy.value || !customerId.value) return;
+  busy.value = true;
+  error.value = '';
   try {
     const result = await $fetch<BillingOverview>(
       `/api/billing/customers/${customerId.value}`,
       { query: { page: page.value } },
-    )
-    loadedCustomer.value = customerId.value
-    overview.value = result
+    );
+    loadedCustomer.value = customerId.value;
+    overview.value = result;
   } catch {
-    overview.value = null
-    details.value = null
+    overview.value = null;
+    details.value = null;
     error.value =
-      'Não foi possível consultar. Verifique sua sessão, o vínculo da conta no Billing e a configuração do serviço.'
+      'Não foi possível consultar. Verifique sua sessão, o vínculo da conta no Billing e a configuração do serviço.';
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 async function selectInvoice(id: string) {
-  error.value = ''
+  error.value = '';
   try {
-    details.value = await $fetch<InvoiceDetails>(`${base.value}/invoices/${id}`)
+    details.value = await $fetch<InvoiceDetails>(
+      `${base.value}/invoices/${id}`,
+    );
   } catch {
-    error.value = 'Não foi possível consultar a fatura.'
+    error.value = 'Não foi possível consultar a fatura.';
   }
 }
 async function refreshDetails() {
-  if (details.value) await selectInvoice(details.value.invoice.id)
+  if (details.value) await selectInvoice(details.value.invoice.id);
 }
 async function refreshFinancial() {
-  await refreshDetails()
-  await load()
+  await refreshDetails();
+  await load();
 }
 async function changePage(delta: number) {
-  page.value += delta
-  await load()
+  page.value += delta;
+  await load();
 }
 async function adminAction(
   path: string,
   method: 'POST' | 'DELETE',
   body?: object,
 ) {
-  if (busy.value) return null
-  busy.value = true
-  error.value = ''
+  if (busy.value) return null;
+  busy.value = true;
+  error.value = '';
   try {
     return await $fetch<{ url?: string }>(`${base.value}/${path}`, {
       method,
       body,
-    })
+    });
   } catch {
     error.value =
-      'Não foi possível concluir a operação. Verifique sua sessão e as configurações.'
-    return null
+      'Não foi possível concluir a operação. Verifique sua sessão e as configurações.';
+    return null;
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 async function grant() {
-  const result = await adminAction('access', 'POST', { expiresInHours: 24 })
-  if (result?.url) accessUrl.value = result.url
-  await load()
+  const result = await adminAction('access', 'POST', { expiresInHours: 24 });
+  if (result?.url) accessUrl.value = result.url;
+  await load();
 }
 async function revoke(id: string) {
-  await adminAction(`access/${id}`, 'DELETE')
-  accessUrl.value = ''
-  await load()
+  await adminAction(`access/${id}`, 'DELETE');
+  accessUrl.value = '';
+  await load();
 }
 async function retry(id: string) {
-  await adminAction(`notifications/${id}/retry`, 'POST', {})
-  await load()
+  await adminAction(`notifications/${id}/retry`, 'POST', {});
+  await load();
 }
 async function copyAccess() {
   try {
-    await navigator.clipboard.writeText(accessUrl.value)
+    await navigator.clipboard.writeText(accessUrl.value);
   } catch {
-    error.value = 'Não foi possível copiar o link.'
+    error.value = 'Não foi possível copiar o link.';
   }
 }
 function notificationLabel(kind: string) {
@@ -295,6 +297,17 @@ function notificationLabel(kind: string) {
         receipt_reversed: 'Correção de recebimento',
       } as Record<string, string>
     )[kind] ?? kind
-  )
+  );
 }
 </script>
+
+<style scoped>
+.billing-content { display: grid; gap: 24px; }
+.billing-content > article:first-child .drawer-form { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+.billing-content :deep(h2), .billing-content :deep(h3) { color: var(--text); }
+.billing-content :deep(p) { line-height: 1.6; }
+.billing-content :deep(.ghost-button), .billing-content :deep(.submit-button) { justify-self: start; }
+.billing-content :deep(.submit-button) { padding: 0 20px; }
+.billing-access { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+@media (max-width: 640px) { .billing-content > article:first-child .drawer-form { grid-template-columns: 1fr; } }
+</style>

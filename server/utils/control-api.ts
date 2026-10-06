@@ -1,5 +1,5 @@
 import type { H3Event } from 'h3';
-import { appendHeader, getHeader } from 'h3';
+import { appendHeader, getHeader, createError } from 'h3';
 
 export function getControlApiBaseUrl(event: H3Event): string {
   const config = useRuntimeConfig(event);
@@ -13,14 +13,20 @@ export async function requestControlApi<TResponse>(
   path: string,
   options: {
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-    body?: unknown;
+    body?: Record<string, unknown>;
+    origin?: string;
   } = {},
 ): Promise<TResponse> {
   const baseUrl = getControlApiBaseUrl(event);
   const initialCookieHeader = getHeader(event, 'cookie') ?? '';
 
   try {
-    return await requestControlApiRaw<TResponse>(baseUrl, path, options, initialCookieHeader);
+    return await requestControlApiRaw<TResponse>(
+      baseUrl,
+      path,
+      options,
+      initialCookieHeader,
+    );
   } catch (error) {
     if (getFetchStatusCode(error) === 401) {
       const refreshedCookieHeader = await refreshControlApiSession(
@@ -52,7 +58,8 @@ export async function requestControlApiWithCookies<TResponse>(
   path: string,
   options: {
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-    body?: unknown;
+    body?: Record<string, unknown>;
+    origin?: string;
   } = {},
 ): Promise<TResponse> {
   const baseUrl = getControlApiBaseUrl(event);
@@ -98,7 +105,8 @@ async function requestControlApiRaw<TResponse>(
   path: string,
   options: {
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-    body?: unknown;
+    body?: Record<string, unknown>;
+    origin?: string;
   },
   cookieHeader: string,
 ): Promise<TResponse> {
@@ -107,6 +115,7 @@ async function requestControlApiRaw<TResponse>(
     body: options.body,
     headers: {
       cookie: cookieHeader,
+      ...(options.origin ? { origin: options.origin } : {}),
     },
     credentials: 'include',
   });
@@ -118,7 +127,8 @@ async function requestControlApiRawWithCookies<TResponse>(
   path: string,
   options: {
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-    body?: unknown;
+    body?: Record<string, unknown>;
+    origin?: string;
   },
   cookieHeader: string,
 ): Promise<TResponse> {
@@ -127,6 +137,7 @@ async function requestControlApiRawWithCookies<TResponse>(
     body: options.body,
     headers: {
       cookie: cookieHeader,
+      ...(options.origin ? { origin: options.origin } : {}),
     },
     credentials: 'include',
   });
@@ -136,32 +147,56 @@ async function requestControlApiRawWithCookies<TResponse>(
   return response._data as TResponse;
 }
 
-async function refreshControlApiSession(
+export async function refreshControlApiSession(
   event: H3Event,
   baseUrl: string,
   cookieHeader: string,
 ): Promise<string | null> {
+  const key = `${baseUrl}|${cookieHeader}`;
+  let pending = refreshRequests.get(key);
+  if (!pending) {
+    pending = $fetch
+      .raw<{ user: unknown }>(`${baseUrl}/auth/refresh`, {
+        method: 'POST',
+        headers: { cookie: cookieHeader },
+        credentials: 'include',
+        retry: 0,
+      })
+      .then((response) => ({
+        cookies: getSetCookieHeaders(response.headers),
+        authenticated: Boolean(response._data?.user),
+      }));
+    refreshRequests.set(key, pending);
+    const remove = () => {
+      const timer: unknown = setTimeout(() => refreshRequests.delete(key), 1000);
+      if (
+        timer !== null &&
+        typeof timer === 'object' &&
+        'unref' in timer &&
+        typeof timer.unref === 'function'
+      ) {
+        timer.unref();
+      }
+    };
+    void pending.then(remove, remove);
+  }
   try {
-    const response = await $fetch.raw(`${baseUrl}/auth/refresh`, {
-      method: 'POST',
-      headers: {
-        cookie: cookieHeader,
-      },
-      credentials: 'include',
-    });
-    const setCookieHeaders = getSetCookieHeaders(response.headers);
-
-    if (!setCookieHeaders.length) {
-      return null;
-    }
-
-    appendSetCookieHeaders(event, response.headers);
-
-    return mergeCookieHeader(cookieHeader, setCookieHeaders);
-  } catch {
-    return null;
+    const result = await pending;
+    for (const cookie of result.cookies)
+      appendHeader(event, 'set-cookie', cookie);
+    return result.authenticated && result.cookies.length
+      ? mergeCookieHeader(cookieHeader, result.cookies)
+      : null;
+  } catch (error) {
+    if (getFetchStatusCode(error) === 401) return null;
+    toControlApiError(error);
   }
 }
+
+const refreshRequests = new Map<
+  string,
+  Promise<{ cookies: string[]; authenticated: boolean }>
+>();
 
 function appendSetCookieHeaders(event: H3Event, headers: Headers): void {
   for (const cookie of getSetCookieHeaders(headers)) {
@@ -186,10 +221,15 @@ function getSetCookieHeaders(headers: Headers): string[] {
 }
 
 function splitSetCookieHeader(header: string): string[] {
-  return header.split(/,(?=\s*[^;,=\s]+=[^;,]+)/g).map((cookie) => cookie.trim());
+  return header
+    .split(/,(?=\s*[^;,=\s]+=[^;,]+)/g)
+    .map((cookie) => cookie.trim());
 }
 
-function mergeCookieHeader(cookieHeader: string, setCookieHeaders: string[]): string {
+function mergeCookieHeader(
+  cookieHeader: string,
+  setCookieHeaders: string[],
+): string {
   const cookies = new Map<string, string>();
 
   for (const cookie of cookieHeader.split(';')) {
@@ -200,18 +240,25 @@ function mergeCookieHeader(cookieHeader: string, setCookieHeaders: string[]): st
       continue;
     }
 
-    cookies.set(trimmed.slice(0, separatorIndex), trimmed.slice(separatorIndex + 1));
+    cookies.set(
+      trimmed.slice(0, separatorIndex),
+      trimmed.slice(separatorIndex + 1),
+    );
   }
 
   for (const setCookie of setCookieHeaders) {
     const [cookiePair] = setCookie.split(';');
+    if (!cookiePair) continue;
     const separatorIndex = cookiePair.indexOf('=');
 
     if (separatorIndex <= 0) {
       continue;
     }
 
-    cookies.set(cookiePair.slice(0, separatorIndex), cookiePair.slice(separatorIndex + 1));
+    cookies.set(
+      cookiePair.slice(0, separatorIndex),
+      cookiePair.slice(separatorIndex + 1),
+    );
   }
 
   return Array.from(cookies.entries())

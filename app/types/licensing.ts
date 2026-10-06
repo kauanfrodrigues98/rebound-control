@@ -21,6 +21,7 @@ export interface LicensePlan {
   id: string;
   name: string;
   description: string;
+  deployment: 'cloud' | 'self_hosted';
   cadence: 'monthly' | 'annual' | 'contract';
   featured: boolean;
   priceLabel: string;

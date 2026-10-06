@@ -270,6 +270,7 @@ type CustomerContractApiResponse = {
   code: string;
   plan: string;
   planId: string | null;
+  currentPlan?: { id: string; name: string } | null;
   status: ContratoCliente['status'];
   cycle: ContratoCliente['ciclo'];
   monthlyValue: string | null;
@@ -351,6 +352,7 @@ function apiToContrato(contract: CustomerContractApiResponse): ContratoCliente {
     id: contract.id,
     codigo: contract.code,
     plano: contract.plan,
+    planoVigente: contract.currentPlan?.name ?? contract.plan,
     planId: contract.planId ?? '',
     status: contract.status,
     ciclo: contract.cycle,

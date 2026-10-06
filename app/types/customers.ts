@@ -57,6 +57,7 @@ export type ContratoCliente = {
   id: string;
   codigo: string;
   plano: string;
+  planoVigente?: string;
   planId: string;
   status: StatusContratoCliente;
   ciclo: CicloContratoCliente;

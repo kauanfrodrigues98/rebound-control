@@ -74,7 +74,7 @@
               <div>
                 <strong>{{ item.titulo }}</strong>
                 <p>{{ item.descricao }}</p>
-                <small>{{ item.data }} · {{ formatarTipoTimelineCliente(item.tipo) }}</small>
+                <small>{{ formatDate(item.data) }} · {{ formatarTipoTimelineCliente(item.tipo) }}</small>
               </div>
             </div>
           </div>
@@ -94,6 +94,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatDate } from "~/utils/date";
 import type { Cliente } from '~/types/customers';
 import {
   contatoPrincipal,

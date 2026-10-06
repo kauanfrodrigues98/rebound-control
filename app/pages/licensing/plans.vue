@@ -28,7 +28,7 @@
     <section class="plans-hero">
       <article class="plans-hero-main">
         <span class="eyebrow">Planos cadastrados</span>
-        <h2>Limites usados para emitir licenças auto-hospedadas</h2>
+        <h2>Planos e limites para Cloud e self-hosted</h2>
         <p>
           Cadastre, edite e arquive planos diretamente no serviço de licenciamento.
           Emissão e renovação usam estes limites como fonte de verdade.
@@ -58,6 +58,7 @@
         @click="selectPlan(plan)"
       >
         <span class="plan-card-topline">
+          <span class="badge neutral">{{ plan.deployment === 'cloud' ? 'Cloud' : 'Self-hosted' }}</span>
           <span class="badge neutral">{{ formatCadence(plan.cadence) }}</span>
           <span v-if="!plan.active" class="badge danger">arquivado</span>
           <UIcon v-if="plan.featured" name="i-lucide-sparkles" />
@@ -83,7 +84,7 @@
       </button>
     </section>
 
-    <PlanPrices v-if="selectedPlan" :key="selectedPlan.id" :plan-id="selectedPlan.id" :active="selectedPlan.active" />
+    <PlanPrices v-if="selectedPlan" :key="selectedPlan.id" :plan-id="selectedPlan.id" :plan-name="selectedPlan.name" :deployment="selectedPlan.deployment ?? 'self_hosted'" :active="selectedPlan.active" />
 
     <section class="content-grid plans-content-grid">
       <article class="panel plan-detail-panel">
@@ -425,6 +426,13 @@
         </label>
         <div class="form-row">
           <label>
+            Ambiente
+            <select v-model="planForm.deployment" required>
+              <option value="cloud">Cloud</option>
+              <option value="self_hosted">Self-hosted</option>
+            </select>
+          </label>
+          <label>
             Cadência
             <select v-model="planForm.cadence" required>
               <option value="monthly">Mensal</option>
@@ -617,6 +625,7 @@ const planForm = reactive({
   name: '',
   description: '',
   cadence: 'monthly' as LicensePlan['cadence'],
+  deployment: 'self_hosted' as LicensePlan['deployment'],
   featured: false,
   priceLabel: 'Definido no Billing',
   active: true,
@@ -786,11 +795,12 @@ const plansErrorMessage = computed(() => {
 watch(
   plans,
   (currentPlans) => {
-  if (!selectedPlanId.value && currentPlans.length) {
+    const firstPlan = currentPlans[0];
+    if (!selectedPlanId.value && firstPlan) {
       selectedPlanId.value =
         currentPlans.find((plan) => plan.active && plan.featured)?.id ??
         currentPlans.find((plan) => plan.active)?.id ??
-        currentPlans[0].id;
+        firstPlan.id;
     }
   },
   { immediate: true },
@@ -986,6 +996,7 @@ function buildPlanPayload(): LicensePlanPayload {
     name: planForm.name,
     description: planForm.description,
     cadence: planForm.cadence,
+    deployment: planForm.deployment,
     featured: planForm.featured,
     priceLabel: planForm.priceLabel,
     active: planForm.active,
@@ -1010,6 +1021,7 @@ function fillPlanForm(plan: LicensePlan): void {
   planForm.name = plan.name;
   planForm.description = plan.description;
   planForm.cadence = plan.cadence;
+  planForm.deployment = plan.deployment ?? 'self_hosted';
   planForm.featured = plan.featured;
   planForm.priceLabel = plan.priceLabel;
   planForm.active = plan.active;
@@ -1033,6 +1045,7 @@ function resetPlanForm(): void {
   planForm.name = '';
   planForm.description = '';
   planForm.cadence = 'monthly';
+  planForm.deployment = 'self_hosted';
   planForm.featured = false;
   planForm.priceLabel = 'Definido no Billing';
   planForm.active = true;

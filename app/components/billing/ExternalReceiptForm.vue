@@ -4,9 +4,9 @@
     <form class="drawer-form" @submit.prevent="receive">
       <div class="form-grid">
         <label
-          >Valor recebido ({{ details.invoice.currency }})<input
+          >Valor recebido ({{ details.invoice.currency }})<BillingMoneyInput
             v-model="form.amount"
-            inputmode="decimal"
+            :currency="details.invoice.currency"
             required
             :disabled="busy" /></label
         ><label
@@ -103,85 +103,86 @@
   </article>
 </template>
 <script setup lang="ts">
-import type { InvoiceDetails } from '~/types/billing'
-import { minorAmount } from '~/utils/billing'
+import { requestKey } from "~/utils/request-key";
+import type { InvoiceDetails } from "~/types/billing";
+import { minorAmount } from "~/utils/billing";
 const props = defineProps<{
-  details: InvoiceDetails | null
-  base: string
-  canWrite: boolean
-}>()
-const emit = defineEmits<{ saved: [] }>()
+  details: InvoiceDetails | null;
+  base: string;
+  canWrite: boolean;
+}>();
+const emit = defineEmits<{ saved: [] }>();
 const form = reactive({
-  amount: '',
-  method: 'bank_transfer',
-  reference: '',
-  paidAt: '',
-  note: '',
-})
+  amount: "",
+  method: "bank_transfer",
+  reference: "",
+  paidAt: "",
+  note: "",
+});
 const fiscal = reactive({
-  number: '',
-  reference: '',
-  documentUrl: '',
-  issuedAt: '',
-})
-const reasons = reactive<Record<string, string>>({})
+  number: "",
+  reference: "",
+  documentUrl: "",
+  issuedAt: "",
+});
+const reasons = reactive<Record<string, string>>({});
 const busy = ref(false),
-  error = ref(''),
-  success = ref('')
+  error = ref(""),
+  success = ref("");
 const reversible = computed(
   () =>
     props.details?.receipts.filter(
-      (r) => r.source === 'external' && !r.reversedAt,
+      (r) => r.source === "external" && !r.reversedAt,
     ) ?? [],
-)
-const requests = new Map<string, { signature: string; key: string }>()
+);
+const requests = new Map<string, { signature: string; key: string }>();
 watch(
   () => props.details?.invoice.id,
   () => {
-    Object.assign(form, { amount: '', reference: '', paidAt: '', note: '' })
+    Object.assign(form, { amount: "", reference: "", paidAt: "", note: "" });
     Object.assign(fiscal, {
-      number: '',
-      reference: '',
-      documentUrl: '',
-      issuedAt: '',
-    })
-    requests.clear()
-    success.value = ''
-    error.value = ''
+      number: "",
+      reference: "",
+      documentUrl: "",
+      issuedAt: "",
+    });
+    requests.clear();
+    success.value = "";
+    error.value = "";
   },
-)
+);
 async function submit(path: string, body: object, message: string) {
-  if (busy.value) return
-  busy.value = true
-  error.value = ''
-  success.value = ''
-  const signature = JSON.stringify(body)
-  let operation = requests.get(path)
+  if (busy.value) return;
+  busy.value = true;
+  error.value = "";
+  success.value = "";
+  const signature = JSON.stringify(body);
+  let operation = requests.get(path);
   if (!operation || operation.signature !== signature) {
-    operation = { signature, key: crypto.randomUUID() }
-    requests.set(path, operation)
+    operation = { signature, key: requestKey() };
+    requests.set(path, operation);
   }
   try {
     await $fetch(`${props.base}/${path}`, {
-      method: 'POST',
+      method: "POST",
       body,
-      headers: { 'Idempotency-Key': operation.key },
-    })
-    requests.delete(path)
-    success.value = message
-    emit('saved')
+      headers: { "Idempotency-Key": operation.key },
+    });
+    requests.delete(path);
+    success.value = message;
+    emit("saved");
   } catch {
     error.value =
-      'Não foi possível confirmar. Em caso de timeout, mantenha os dados e tente novamente para recuperar a mesma operação.'
+      "Não foi possível confirmar. Em caso de timeout, mantenha os dados e tente novamente para recuperar a mesma operação.";
   } finally {
-    busy.value = false
+    busy.value = false;
   }
 }
 async function receive() {
   try {
-    if (!props.details) return
-    const amount = minorAmount(form.amount, props.details.invoice.currency)
-    const paidAt = new Date(form.paidAt).toISOString()
+    if (!props.details) return;
+    const amount = minorAmount(form.amount, props.details.invoice.currency);
+    const paidAt = new Date(form.paidAt).toISOString();
     await submit(
       `invoices/${props.details.invoice.id}/external-receipts`,
       {
@@ -192,17 +193,17 @@ async function receive() {
         paidAt,
         ...(form.note.trim() ? { note: form.note } : {}),
       },
-      'Recebimento registrado.',
-    )
+      "Recebimento registrado.",
+    );
     if (success.value)
-      Object.assign(form, { amount: '', reference: '', paidAt: '', note: '' })
+      Object.assign(form, { amount: "", reference: "", paidAt: "", note: "" });
   } catch {
-    error.value = 'Confira o valor, a data e a referência do pagamento.'
+    error.value = "Confira o valor, a data e a referência do pagamento.";
   }
 }
 async function attach() {
   try {
-    if (!props.details) return
+    if (!props.details) return;
     await submit(
       `invoices/${props.details.invoice.id}/fiscal-documents`,
       {
@@ -211,17 +212,17 @@ async function attach() {
         issuedAt: new Date(fiscal.issuedAt).toISOString(),
         ...(fiscal.documentUrl ? { documentUrl: fiscal.documentUrl } : {}),
       },
-      'Documento fiscal associado.',
-    )
+      "Documento fiscal associado.",
+    );
   } catch {
-    error.value = 'Confira a data e os dados do documento fiscal.'
+    error.value = "Confira a data e os dados do documento fiscal.";
   }
 }
 function reverse(id: string) {
   return submit(
     `external-receipts/${id}/reverse`,
     { reason: reasons[id] },
-    'Reversão registrada.',
-  )
+    "Reversão registrada.",
+  );
 }
 </script>

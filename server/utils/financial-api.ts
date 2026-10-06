@@ -1,4 +1,8 @@
 import {
+  refreshControlApiSession,
+  getControlApiBaseUrl,
+} from "./control-api.ts";
+import {
   appendHeader,
   createError,
   getHeader,
@@ -26,8 +30,18 @@ export async function proxyFinancialApi(
           ["POST", `customers/${uuid}/contracts/${uuid}/terms`],
           ["POST", `customers/${uuid}/contracts/${uuid}/terms/${uuid}/sync`],
           ["POST", `customers/${uuid}/contracts/${uuid}/terms/${uuid}/cancel`],
+          ["GET", `customers/${uuid}/contracts/${uuid}/termination`],
+          ["POST", `customers/${uuid}/contracts/${uuid}/termination`],
           ["GET", `customers/${uuid}/contracts/${uuid}/financial-state`],
           ["POST", `customers/${uuid}/contracts/${uuid}/financial-state`],
+          [
+            "POST",
+            `customers/${uuid}/contracts/${uuid}/financial-state/renewal`,
+          ],
+          [
+            "POST",
+            `customers/${uuid}/contracts/${uuid}/financial-state/suspension-policy`,
+          ],
           ["GET", `customers/${uuid}/contracts/${uuid}/recurrence`],
           ["POST", `customers/${uuid}/contracts/${uuid}/recurrence`],
           ["POST", `customers/${uuid}/contracts/${uuid}/recurrence/process`],
@@ -86,16 +100,18 @@ export async function proxyFinancialApi(
     query.set("format", requestUrl.searchParams.get("format")!);
   const suffix = query.size ? `?${query}` : "";
   const document = isFinancialDocumentPath(path);
-  try {
-    const response = await $fetch.raw<unknown>(
+  const body = ["POST", "PUT"].includes(method)
+    ? await readBody(event)
+    : undefined;
+  const initialCookie = getHeader(event, "cookie") ?? "";
+  const request = (cookie: string) =>
+    $fetch.raw<unknown>(
       `${getControlApiBaseUrl(event)}/${audience}/${path}${suffix}`,
       {
         method: method as "GET" | "POST" | "PUT" | "DELETE",
-        body: ["POST", "PUT"].includes(method)
-          ? await readBody(event)
-          : undefined,
+        body,
         headers: {
-          cookie: getHeader(event, "cookie") ?? "",
+          cookie,
           ...(origin ? { origin } : {}),
           ...(getHeader(event, "idempotency-key")
             ? { "idempotency-key": getHeader(event, "idempotency-key")! }
@@ -106,6 +122,21 @@ export async function proxyFinancialApi(
         timeout: 50000,
       },
     );
+  try {
+    let response;
+    try {
+      response = await request(initialCookie);
+    } catch (error) {
+      const status = (error as { statusCode?: number }).statusCode;
+      if (audience !== "billing" || status !== 401) throw error;
+      const cookie = await refreshControlApiSession(
+        event,
+        getControlApiBaseUrl(event),
+        initialCookie,
+      );
+      if (!cookie) throw error;
+      response = await request(cookie);
+    }
     for (const cookie of response.headers.getSetCookie())
       appendHeader(event, "set-cookie", cookie);
     if (document) {
