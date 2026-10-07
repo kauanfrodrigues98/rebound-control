@@ -18,6 +18,39 @@
       <p v-if="error" role="alert" class="status-banner">{{ error }}</p>
       <p v-if="message" role="status">{{ message }}</p>
       <p v-if="loading" role="status">Carregando condições...</p>
+      <div
+        v-if="data?.current?.terms.billingMode === 'courtesy'"
+        class="terms-summary"
+        role="status"
+      >
+        <strong>Cortesia · sem novas faturas ou cobrança automática</strong>
+        <p>
+          {{
+            data.current.terms.courtesyExpiresAt
+              ? `Validade: ${dateTime(data.current.terms.courtesyExpiresAt)}`
+              : "Sem prazo de expiração"
+          }}
+        </p>
+        <p>{{ data.current.terms.reason }}</p>
+        <p>
+          Faturas anteriores permanecem no histórico. Ao encerrar, Cloud volta
+          ao Free; self-hosted perde o acesso à licença. Nenhum plano pago será
+          contratado automaticamente.
+        </p>
+        <form v-if="canWrite && editable" @submit.prevent="endCourtesy">
+          <label
+            >Motivo do encerramento<input
+              v-model.trim="courtesyEndReason"
+              required
+              minlength="3"
+              maxlength="1000"
+              :disabled="busy"
+          /></label>
+          <button class="ghost-button" :disabled="busy">
+            Encerrar cortesia
+          </button>
+        </form>
+      </div>
       <div v-if="data?.current" class="terms-summary">
         <strong
           >Versão vigente {{ data.current.sourceVersion }}:
@@ -115,7 +148,10 @@
       <BillingContractRecurrence
         :customer-id="customerId"
         :contract-id="contract.id"
-        :active="contract.status === 'ativo'"
+        :active="
+          contract.status === 'ativo' &&
+          data?.current?.terms.billingMode !== 'courtesy'
+        "
       />
       <BillingContractTermination
         :customer-id="customerId"
@@ -129,6 +165,32 @@
         </summary>
         <form class="drawer-form" @submit.prevent="publish">
           <h3>Preço e vigência</h3>
+          <label
+            >Condição do contrato<select
+              v-model="form.billingMode"
+              :disabled="busy"
+              @change="billingModeChanged"
+            >
+              <option
+                value="standard"
+                :disabled="data?.current?.terms.billingMode === 'courtesy'"
+              >
+                Cobrança normal
+              </option>
+              <option value="courtesy">Cortesia · acesso sem cobrança</option>
+            </select></label
+          >
+          <p v-if="form.billingMode === 'courtesy'" class="muted-text">
+            Escolha o plano e os limites abaixo. Ciclo e implantação serão zero;
+            não haverá novas faturas, cobrança automática ou excedentes. Faturas
+            anteriores continuam válidas.
+          </p>
+          <label v-if="form.billingMode === 'courtesy'"
+            >Validade da cortesia (opcional)<input
+              v-model="form.courtesyExpiresAt"
+              type="datetime-local"
+              :disabled="busy"
+          /></label>
           <div class="terms-grid">
             <label
               >Plano<select
@@ -148,7 +210,10 @@
               </select></label
             >
             <label
-              >Preço<select v-model="form.pricing" :disabled="busy">
+              >Preço<select
+                v-model="form.pricing"
+                :disabled="busy || form.billingMode === 'courtesy'"
+              >
                 <option value="custom">Negociado para este cliente</option>
                 <option value="catalog">Versão do catálogo</option>
               </select></label
@@ -176,7 +241,7 @@
                 >Valor total do ciclo (BRL)<BillingMoneyInput
                   v-model="form.amount"
                   required
-                  :disabled="busy" /></label
+                  :disabled="busy || form.billingMode === 'courtesy'" /></label
               ><label
                 >Periodicidade<select
                   v-model.number="form.intervalMonths"
@@ -193,7 +258,7 @@
               >Implantação (BRL)<BillingMoneyInput
                 v-model="form.setupAmount"
                 required
-                :disabled="busy"
+                :disabled="busy || form.billingMode === 'courtesy'"
             /></label>
             <label
               >Dia do vencimento<input
@@ -221,8 +286,8 @@
               >Vigência desta versão<input
                 v-model="form.effectiveAt"
                 type="datetime-local"
-                required
-                :disabled="busy"
+                :required="form.billingMode !== 'courtesy'"
+                :disabled="busy || form.billingMode === 'courtesy'"
             /></label>
           </div>
           <fieldset :disabled="busy">
@@ -337,6 +402,8 @@ const path = computed(
 const form = reactive({
   planId: props.contract.planId || "",
   pricing: "custom" as "custom" | "catalog",
+  billingMode: "standard" as "standard" | "courtesy",
+  courtesyExpiresAt: "",
   priceVersionId: "",
   amount: "",
   setupAmount: "0",
@@ -363,6 +430,7 @@ const limitFields = [
 const flagFields = [
   { key: "aiEnabled", label: "Inteligência artificial" },
   { key: "automaticReplayEnabled", label: "Replay automático" },
+  { key: "manualReplayEnabled", label: "Replay manual" },
 ];
 const priceOptions = computed(() => {
   const options: Array<
@@ -390,6 +458,47 @@ const priceOptions = computed(() => {
     });
   return options;
 });
+const courtesyEndReason = ref("");
+let courtesyEndAttempt: { reason: string; key: string } | null = null;
+async function endCourtesy() {
+  if (busy.value || !data.value?.current) return;
+  saving.value = true;
+  error.value = "";
+  try {
+    const reason = courtesyEndReason.value;
+    if (!courtesyEndAttempt || courtesyEndAttempt.reason !== reason)
+      courtesyEndAttempt = { reason, key: requestKey() };
+    await $fetch(`${path.value}/courtesy/end`, {
+      method: "POST",
+      body: { reason },
+      headers: { "Idempotency-Key": courtesyEndAttempt.key },
+    });
+    courtesyEndAttempt = null;
+    message.value =
+      "Encerramento da cortesia registrado. A sincronização de acesso e o retorno Cloud ao Free serão processados automaticamente.";
+    await load();
+  } catch {
+    error.value =
+      "Não foi possível encerrar a cortesia. Verifique a sincronização e repita com o mesmo motivo.";
+  } finally {
+    saving.value = false;
+  }
+}
+function billingModeChanged() {
+  if (form.billingMode === "courtesy") {
+    form.pricing = "custom";
+    form.amount = "0";
+    form.setupAmount = "0";
+    form.priceVersionId = "";
+    form.effectiveAt = "";
+  }
+}
+function localInput(value: string) {
+  const date = new Date(value);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+}
 const cancellationReasons = reactive<Record<string, string>>({});
 async function cancelRevision(id: string) {
   if (busy.value) return;
@@ -411,7 +520,7 @@ async function cancelRevision(id: string) {
   }
 }
 
-let attempt: { hash: string; key: string } | null = null;
+let attempt: { hash: string; key: string; effectiveAt: string } | null = null;
 function dateTime(value: string) {
   return (
     new Intl.DateTimeFormat("pt-BR", {
@@ -442,6 +551,10 @@ function initialize(row: ContractRevision | null) {
   Object.assign(form, {
     planId: terms.planId,
     pricing: terms.pricing,
+    billingMode: terms.billingMode ?? "standard",
+    courtesyExpiresAt: terms.courtesyExpiresAt
+      ? localInput(terms.courtesyExpiresAt)
+      : "",
     priceVersionId: terms.priceVersionId ?? "",
     amount: major(terms.amount),
     setupAmount: major(terms.setupAmount),
@@ -542,6 +655,11 @@ async function publish() {
     const body = {
       planId: form.planId,
       pricing: form.pricing,
+      billingMode: form.billingMode,
+      courtesyExpiresAt:
+        form.billingMode === "courtesy" && form.courtesyExpiresAt
+          ? new Date(form.courtesyExpiresAt).toISOString()
+          : null,
       priceVersionId: form.pricing === "catalog" ? form.priceVersionId : null,
       ...(form.pricing === "custom"
         ? { amount: amount(form.amount), intervalMonths: form.intervalMonths }
@@ -551,13 +669,21 @@ async function publish() {
       allowedMethods: [...form.allowedMethods],
       startsOn: form.startsOn,
       endsOn: form.endsOn || null,
-      effectiveAt: new Date(form.effectiveAt).toISOString(),
+      effectiveAt:
+        form.billingMode === "courtesy"
+          ? new Date().toISOString()
+          : new Date(form.effectiveAt).toISOString(),
       overrides: values,
       reason: form.reason,
     };
-    const hash = JSON.stringify(body);
+    const hash = JSON.stringify({
+      ...body,
+      effectiveAt:
+        form.billingMode === "courtesy" ? "immediate" : body.effectiveAt,
+    });
     if (!attempt || attempt.hash !== hash)
-      attempt = { hash, key: requestKey() };
+      attempt = { hash, key: requestKey(), effectiveAt: body.effectiveAt };
+    body.effectiveAt = attempt.effectiveAt;
     const result = await $fetch<ContractRevision>(path.value, {
       method: "POST",
       body,

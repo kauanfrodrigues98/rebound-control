@@ -9,7 +9,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "test": "node --test test/*.mjs"
+    "test": "node --test test/*.mjs",
+    "typecheck": "nuxt typecheck"
   },
   "dependencies": {
     "@nuxt/ui": "^4.10.0",
@@ -20,6 +21,9 @@
     "vue-router": "^5.2.0"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "^1.2.118"
+    "@iconify-json/lucide": "^1.2.118",
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3",
+    "vue-tsc": "^3.2.5"
   }
 }

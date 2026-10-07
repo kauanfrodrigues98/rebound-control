@@ -1,5 +1,13 @@
 <template>
   <div class="financial-state">
+    <p v-if="state?.financial.courtesy" role="status">
+      Cortesia {{ state.financial.courtesy.active ? "ativa" : "encerrada" }} ·
+      {{
+        state.financial.courtesy.expiresAt
+          ? formatDateTime(state.financial.courtesy.expiresAt)
+          : "sem prazo"
+      }}. Sem novas cobranças.
+    </p>
     <p v-if="state">
       Pago até
       {{
@@ -43,6 +51,7 @@
     </p>
     <div
       v-if="
+        !state?.financial.courtesy &&
         state?.financial.recurrenceState &&
         state.financial.recurrenceState !== 'active'
       "
@@ -81,7 +90,10 @@
         </p>
       </template>
     </div>
-    <details v-if="canWrite && state" class="suspension-policy">
+    <details
+      v-if="canWrite && state && !state.financial.courtesy"
+      class="suspension-policy"
+    >
       <summary>Política contratual durante suspensão</summary>
       <p>
         Por padrão, novas competências param na suspensão. A cobrança continuada
@@ -137,6 +149,11 @@ const { user } = useControlAuth();
 const canWrite = computed(() => user.value?.role === "admin");
 const state = ref<{
     financial: {
+      courtesy?: {
+        active: boolean;
+        expiresAt: string | null;
+        reason: string;
+      } | null;
       suspensionBillingPolicy?: "pause" | "continue";
       recurrenceState?: "active" | "paused" | "renewal_required";
       renewalInvoiceId?: string | null;

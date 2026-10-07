@@ -28,6 +28,7 @@ export async function proxyFinancialApi(
           ["POST", "plans/[a-zA-Z0-9_-]{1,80}/prices"],
           ["GET", `customers/${uuid}/contracts/${uuid}/terms`],
           ["POST", `customers/${uuid}/contracts/${uuid}/terms`],
+          ["POST", `customers/${uuid}/contracts/${uuid}/terms/courtesy/end`],
           ["POST", `customers/${uuid}/contracts/${uuid}/terms/${uuid}/sync`],
           ["POST", `customers/${uuid}/contracts/${uuid}/terms/${uuid}/cancel`],
           ["GET", `customers/${uuid}/contracts/${uuid}/termination`],
