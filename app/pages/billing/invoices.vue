@@ -23,7 +23,7 @@
           Consultar
         </button>
       </form>
-      <p v-if="error" class="billing-error" role="alert">{{ error }}</p>
+
     </article>
     <template v-if="overview">
       <BillingProviderCustomer :base="base" :can-write="canWrite" />
@@ -177,7 +177,7 @@
 import type { BillingOverview, InvoiceDetails } from '~/types/billing';
 import { billingDate, billingMoney, billingStatus } from '~/utils/billing';
 definePageMeta({ title: 'Faturas', eyebrow: 'Cobrança' });
-const { clientes, carregarClientes } = useCustomersMock();
+const { clientes, carregarClientes, erroClientes } = useCustomersMock();
 const { user } = useControlAuth();
 const canWrite = computed(() => user.value?.role === 'admin');
 const route = useRoute();
@@ -299,6 +299,8 @@ function notificationLabel(kind: string) {
     )[kind] ?? kind
   );
 }
+useFeedbackToast(error, 'error');
+useFeedbackToast(erroClientes);
 </script>
 
 <style scoped>

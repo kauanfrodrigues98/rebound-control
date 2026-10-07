@@ -84,10 +84,6 @@
       <p v-else>{{ filteredLicenses.length }} registros</p>
     </div>
 
-    <div v-if="errorMessage" class="status-banner">
-      {{ errorMessage }}
-    </div>
-
     <div class="table-wrap">
       <table>
         <thead>
@@ -1255,4 +1251,5 @@ function getWeekNumber(date: Date): string {
 
   return String(Math.ceil((pastDays + firstDay.getDay() + 1) / 7)).padStart(2, '0');
 }
+useFeedbackToast(errorMessage, 'error');
 </script>

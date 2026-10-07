@@ -62,7 +62,7 @@
         existentes. Notificações começam pelos eventos posteriores à
         habilitação.
       </p>
-      <p v-if="error" role="alert" class="billing-error">{{ error }}</p>
+
       <button
         v-if="canWrite"
         class="submit-button"
@@ -75,6 +75,7 @@
 </template>
 <script setup lang="ts">
 import type { FinancialProfile } from '~/types/billing'
+const toast = useToast();
 const props = defineProps<{
   profile: FinancialProfile | null
   base: string
@@ -123,6 +124,7 @@ async function save() {
         notificationsEnabled: form.notificationsEnabled,
       },
     })
+    toast.add({ title: 'Perfil financeiro salvo', color: 'success' })
     emit('saved')
   } catch {
     error.value = 'Não foi possível salvar. Confira os campos e sua sessão.'
@@ -130,4 +132,5 @@ async function save() {
     busy.value = false
   }
 }
+useFeedbackToast(error, 'error');
 </script>

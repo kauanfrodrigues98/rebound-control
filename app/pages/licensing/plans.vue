@@ -21,9 +21,6 @@
   </section>
 
   <section class="plans-page">
-    <div v-if="plansErrorMessage" class="status-banner plans-status">
-      {{ plansErrorMessage }}
-    </div>
 
     <section class="plans-hero">
       <article class="plans-hero-main">
@@ -1141,6 +1138,7 @@ function formatSla(value: unknown): string {
 
   return `${formatNumber(numberValue)}h`;
 }
+useFeedbackToast(plansErrorMessage, 'error');
 </script>
 
 <style scoped>
@@ -1222,9 +1220,6 @@ function formatSla(value: unknown): string {
   padding: 24px;
 }
 
-.plans-status {
-  margin: 0;
-}
 
 .plans-hero {
   display: grid;

@@ -42,9 +42,7 @@
           >Cadastrar cliente ou contrato</NuxtLink
         >
       </div>
-      <p v-if="erroClientes" class="status-banner" role="alert">
-        {{ erroClientes }}
-      </p>
+
       <p v-if="carregandoClientes" class="empty-state" role="status">
         Carregando contratos...
       </p>
@@ -162,6 +160,7 @@ const metrics = computed(() => [
   },
 ]);
 onMounted(carregarClientes);
+useFeedbackToast(erroClientes, 'error');
 </script>
 <style scoped>
 .contracts-content > .metrics-grid { margin: 0; }

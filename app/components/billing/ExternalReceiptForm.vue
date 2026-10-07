@@ -98,8 +98,7 @@
         </button>
       </form>
     </div>
-    <p v-if="error" role="alert" class="billing-error">{{ error }}</p>
-    <p v-if="success" role="status">{{ success }}</p>
+
   </article>
 </template>
 <script setup lang="ts">
@@ -225,4 +224,6 @@ function reverse(id: string) {
     "Reversão registrada.",
   );
 }
+useFeedbackToast(error, 'error');
+useFeedbackToast(success, 'success');
 </script>

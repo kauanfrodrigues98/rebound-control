@@ -28,10 +28,6 @@
       </div>
     </div>
 
-    <div v-if="error" class="status-banner">
-      Não foi possível carregar as instalações do serviço de licenciamento.
-    </div>
-
     <div class="table-wrap">
       <table>
         <thead>
@@ -1097,4 +1093,5 @@ function formatCadence(cadence: LicensePlan['cadence']): string {
 
   return labels[cadence];
 }
+useFeedbackToast(() => error.value ? 'Não foi possível carregar as instalações do serviço de licenciamento.' : '');
 </script>

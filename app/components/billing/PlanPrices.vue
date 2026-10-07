@@ -37,8 +37,7 @@
       <p v-if="loading" class="muted-text" role="status">
         Carregando preços...
       </p>
-      <p v-if="error" class="status-banner" role="alert">{{ error }}</p>
-      <p v-if="success" class="price-success" role="status">{{ success }}</p>
+
       <div v-if="catalog" class="current-price">
         <div>
           <span class="eyebrow">Preço vigente</span
@@ -325,6 +324,8 @@ async function publish() {
   }
 }
 onMounted(load);
+useFeedbackToast(error, 'error');
+useFeedbackToast(success, 'success');
 </script>
 <style scoped>
 .plan-prices {
@@ -428,13 +429,6 @@ onMounted(load);
   min-width: 160px;
   flex-shrink: 0;
   margin: 0;
-}
-.price-success {
-  padding: 12px 16px;
-  border: 1px solid rgba(0, 201, 127, 0.3);
-  background: rgba(0, 201, 127, 0.08);
-  border-radius: 8px;
-  color: var(--primary, #00c97f);
 }
 .price-editor h3,
 .price-history h3,

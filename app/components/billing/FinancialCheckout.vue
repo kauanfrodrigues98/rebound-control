@@ -97,6 +97,7 @@ onBeforeUnmount(() => {
   disposed = true;
   context?.revert();
 });
+useFeedbackToast(() => props.error);
 </script>
 
 <template>
@@ -139,9 +140,7 @@ onBeforeUnmount(() => {
           ><UIcon name="i-lucide-building-2" /> {{ session.customerName }}</span
         >
       </section>
-      <p v-if="error" class="feedback error" role="alert">
-        <UIcon name="i-lucide-circle-alert" /> {{ error }}
-      </p>
+
       <p v-if="busy" class="loading-note" role="status">
         <UIcon name="i-lucide-loader-circle" class="loading-icon" /> Atualizando
         informações…

@@ -9,10 +9,6 @@
 
     <CustomerMetrics :metricas="metricas" />
 
-    <section v-if="erroClientes" class="page-content">
-      <p class="muted-text">{{ erroClientes }}</p>
-    </section>
-
     <section class="content-grid customer-content-grid">
       <CustomerPipeline v-model:filtro-etapa="filtroEtapa" :etapas="cardsEtapas" />
       <CustomerFocusCard :cliente="clienteEmFoco" />
@@ -44,6 +40,7 @@ import CustomerPipeline from '~/components/customers/CustomerPipeline.vue';
 import CustomersTable from '~/components/customers/CustomersTable.vue';
 import type { Cliente } from '~/types/customers';
 import { clonarCliente } from '~/utils/customers';
+const toast = useToast();
 
 definePageMeta({
   title: 'Clientes',
@@ -94,6 +91,7 @@ onMounted(() => {
 });
 
 async function salvarCliente(): Promise<void> {
+  erroClientes.value = null;
   const payload: Cliente = {
     ...form.value,
     id: form.value.id,
@@ -108,5 +106,7 @@ async function salvarCliente(): Promise<void> {
   }
 
   cadastroAberto.value = false;
+  toast.add({ title: 'Cliente salvo', color: 'success' });
 }
+useFeedbackToast(erroClientes, 'error');
 </script>

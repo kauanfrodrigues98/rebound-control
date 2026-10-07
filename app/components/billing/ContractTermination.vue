@@ -46,11 +46,12 @@
         </button>
       </form>
     </details>
-    <p v-if="error" role="alert">{{ error }}</p>
+
   </section>
 </template>
 <script setup lang="ts">
 import { requestKey } from "~/utils/request-key";
+const toast = useToast();
 const props = defineProps<{
   customerId: string;
   contractId: string;
@@ -99,6 +100,7 @@ async function submit() {
       headers: { "idempotency-key": operation.key },
       body: { reason: operation.reason, confirm: true },
     });
+    toast.add({ title: "Encerramento registrado", description: "Consulte a data e o estado de sincronização do contrato.", color: "success" });
   } catch {
     error.value =
       "Não foi possível confirmar. Verifique se o contrato já utiliza o faturamento interno e tente novamente.";
@@ -117,6 +119,7 @@ watch(
     void load();
   },
 );
+useFeedbackToast(error, 'error');
 </script>
 <style scoped>
 .termination-panel {

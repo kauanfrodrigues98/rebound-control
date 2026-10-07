@@ -118,7 +118,7 @@
         Salvar política contratual
       </button>
     </details>
-    <p v-if="error" role="alert">{{ error }}</p>
+
     <div class="financial-actions">
       <button class="ghost-button" type="button" :disabled="busy" @click="load">
         Consultar estado financeiro</button
@@ -241,6 +241,7 @@ async function load() {
 async function sync() {
   await request("POST");
 }
+useFeedbackToast(error, 'error');
 </script>
 
 <style scoped>

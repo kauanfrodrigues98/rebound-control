@@ -14,7 +14,7 @@
           : "Cobrança automática desativada."
       }}
     </p>
-    <p v-if="error" class="automatic-error" role="alert">{{ error }}</p>
+
     <form v-if="status && !status.enabled" @submit.prevent="setup">
       <label class="automatic-consent"
         ><input v-model="consent" type="checkbox" required :disabled="busy" />{{
@@ -112,6 +112,7 @@ async function disable() {
   }
 }
 onMounted(load);
+useFeedbackToast(error, 'error');
 </script>
 
 <style scoped>
@@ -155,13 +156,6 @@ onMounted(load);
   color: #93a2b8;
   line-height: 1.7;
   margin: 12px 0;
-}
-.automatic-card > p.automatic-error {
-  color: #efb5b5;
-  background: #efb5b508;
-  border: 1px solid #efb5b520;
-  padding: 12px;
-  border-radius: 9px;
 }
 .automatic-consent {
   display: flex;

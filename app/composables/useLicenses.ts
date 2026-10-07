@@ -36,6 +36,22 @@ export interface LicensePlanPayload {
 }
 
 export function useLicenses() {
+  const toast = useToast();
+  async function requestOperation<T>(request: () => Promise<T>): Promise<T> {
+    try {
+      return await request();
+    } catch (error: unknown) {
+      toast.add({
+        title: 'Não foi possível concluir a operação de licenciamento',
+        description: 'Confira os dados, sua permissão e a disponibilidade do serviço.',
+        color: 'error',
+        icon: 'i-lucide-circle-alert',
+        duration: 8000,
+      });
+      throw error;
+    }
+  }
+
   const listPlans = (includeArchived = false) =>
     useFetch<LicensePlansResponse>('/api/plans', {
       query: { includeArchived },
@@ -43,21 +59,21 @@ export function useLicenses() {
     });
 
   const createPlan = (payload: LicensePlanPayload) =>
-    $fetch<LicensePlan>('/api/plans', {
+    requestOperation(() => $fetch<LicensePlan>('/api/plans', {
       method: 'POST',
       body: payload,
-    });
+    }));
 
   const updatePlan = (planId: string, payload: LicensePlanPayload) =>
-    $fetch<LicensePlan>(`/api/plans/${planId}`, {
+    requestOperation(() => $fetch<LicensePlan>(`/api/plans/${planId}`, {
       method: 'PUT',
       body: payload,
-    });
+    }));
 
   const archivePlan = (planId: string) =>
-    $fetch<LicensePlan>(`/api/plans/${planId}`, {
+    requestOperation(() => $fetch<LicensePlan>(`/api/plans/${planId}`, {
       method: 'DELETE',
-    });
+    }));
 
   const listLicenses = () =>
     useFetch<LicensesResponse>('/api/licenses', {
@@ -65,27 +81,27 @@ export function useLicenses() {
     });
 
   const activateLicense = (payload: LicenseActivationPayload) =>
-    $fetch<ActivateLicenseResponse>('/api/licenses', {
+    requestOperation(() => $fetch<ActivateLicenseResponse>('/api/licenses', {
       method: 'POST',
       body: payload,
-    });
+    }));
 
   const getCurrentLicense = (licenseInstanceId: string) =>
-    $fetch<CurrentLicenseResponse>(
+    requestOperation(() => $fetch<CurrentLicenseResponse>(
       `/api/licenses/${licenseInstanceId}/current`,
-    );
+    ));
 
   const reissueLicense = (
     licenseInstanceId: string,
     payload: LicenseReissuePayload,
   ) =>
-    $fetch<CurrentLicenseResponse>(
+    requestOperation(() => $fetch<CurrentLicenseResponse>(
       `/api/licenses/${licenseInstanceId}/reissue`,
       {
         method: 'POST',
         body: payload,
       },
-    );
+    ));
 
   const getLicenseHealth = (license: LicenseListItem) => {
     const now = Date.now();
