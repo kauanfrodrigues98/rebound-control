@@ -8,7 +8,6 @@
       <button type="button" @click="refreshLicenses()">Atualizar</button>
     </div>
 
-    <p v-if="error" class="status-banner" role="alert">Não foi possível carregar as comunicações. Tente novamente.</p>
     <p v-if="pending" class="empty-state" role="status">Carregando comunicações...</p>
     <div v-else class="table-wrap">
       <table>
@@ -72,4 +71,5 @@ function formatHealth(health: string): string {
 
   return labels[health] ?? health;
 }
+useFeedbackToast(() => error.value ? 'Não foi possível carregar as comunicações. Tente novamente.' : '');
 </script>

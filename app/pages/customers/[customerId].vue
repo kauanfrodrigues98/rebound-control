@@ -334,6 +334,7 @@ import CustomerContractDrawer from '~/components/customers/CustomerContractDrawe
 import CustomerTimelineActionDrawer from '~/components/customers/CustomerTimelineActionDrawer.vue';
 import type { ContatoCliente, ContratoCliente, TimelineCliente } from '~/types/customers';
 import type { ActivateLicenseResponse, LicenseListItem } from '~/types/licensing';
+const toast = useToast();
 
 type AbaCliente = 'visao-geral' | 'contatos' | 'timeline' | 'contratos' | 'instalacoes';
 
@@ -477,6 +478,7 @@ onMounted(() => {
 });
 
 async function salvarContato(): Promise<void> {
+  erroClientes.value = null;
   if (!cliente.value) return;
 
   try {
@@ -488,9 +490,11 @@ async function salvarContato(): Promise<void> {
   }
 
   contatoDrawerAberto.value = false;
+  toast.add({ title: 'Contato salvo', color: 'success' });
 }
 
 async function salvarAcao(): Promise<void> {
+  erroClientes.value = null;
   if (!cliente.value) return;
 
   try {
@@ -502,9 +506,11 @@ async function salvarAcao(): Promise<void> {
   }
 
   acaoDrawerAberto.value = false;
+  toast.add({ title: 'Ação registrada', color: 'success' });
 }
 
 async function salvarContrato(): Promise<void> {
+  erroClientes.value = null;
   if (!cliente.value) return;
 
   try {
@@ -524,6 +530,7 @@ async function salvarContrato(): Promise<void> {
 
   contratoEmEdicao.value = null;
   contratoDrawerAberto.value = false;
+  toast.add({ title: 'Contrato salvo', color: 'success' });
 }
 
 async function emitirLicencaContrato(contrato: ContratoCliente): Promise<void> {
@@ -570,6 +577,7 @@ function formatarDataHoraLicenca(value?: string): string {
     timeStyle: 'short',
   }).format(new Date(value));
 }
+useFeedbackToast(erroClientes, 'error');
 </script>
 
 <style scoped>

@@ -28,9 +28,7 @@
         Aviso por e-mail aguardando configuração de SMTP e destinatário. As
         solicitações permanecem registradas.
       </p>
-      <p v-if="error || actionError" role="alert" class="status-banner">
-        {{ actionError || "Não foi possível carregar as solicitações." }}
-      </p>
+
       <p v-if="pending" class="empty-state">Carregando solicitações...</p>
       <div v-else-if="!data?.requests.length" class="empty-state">
         Nenhuma solicitação encontrada.
@@ -132,6 +130,7 @@
   </section>
 </template>
 <script setup lang="ts">
+const toast = useToast();
 definePageMeta({ title: "Solicitações", eyebrow: "Comercial" });
 interface SalesRequest {
   id: string;
@@ -188,6 +187,7 @@ async function update(id: string) {
   try {
     await $fetch(`/api/requests/${id}`, { method: "PUT", body: draft(id) });
     await refresh();
+    toast.add({ title: "Solicitação atualizada", color: "success" });
   } catch {
     actionError.value =
       "Não foi possível atualizar. Recarregue e confira o status antes de repetir.";
@@ -208,6 +208,8 @@ async function retry(id: string) {
     busy.value = false;
   }
 }
+useFeedbackToast(actionError, 'error');
+useFeedbackToast(() => error.value ? 'Não foi possível carregar as solicitações.' : '');
 </script>
 <style scoped>
 .requests-page {

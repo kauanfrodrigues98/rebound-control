@@ -63,11 +63,6 @@
           </button>
         </div>
 
-        <div v-if="errorMessage" class="control-auth-error" role="alert">
-          <UIcon name="i-lucide-circle-alert" />
-          <span>{{ errorMessage }}</span>
-        </div>
-
         <form v-if="!isFirstAccess" class="control-auth-form" @submit.prevent="handleSubmit">
           <label>
             Email
@@ -330,4 +325,5 @@ async function handleFirstAccess(): Promise<void> {
     isSubmitting.value = false
   }
 }
+useFeedbackToast(errorMessage, 'error');
 </script>

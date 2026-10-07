@@ -20,8 +20,6 @@
       cliente paga pelos meios acordados. O débito automático depende da
       autorização de cartão no portal financeiro.
     </p>
-    <p v-if="error" role="alert" class="status-banner">{{ error }}</p>
-    <p v-if="message" role="status">{{ message }}</p>
 
     <template v-if="loaded && recurrence">
       <p>
@@ -208,6 +206,8 @@ async function changeState() {
     stateReason.value = '';
 }
 onMounted(load);
+useFeedbackToast(error, 'error');
+useFeedbackToast(message, 'success');
 </script>
 <style scoped>
 .recurrence {

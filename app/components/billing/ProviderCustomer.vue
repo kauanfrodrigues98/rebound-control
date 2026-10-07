@@ -8,7 +8,7 @@
           : "O vínculo com a Stripe será criado ao iniciar o Checkout ou cadastrar o cartão."
       }}
     </p>
-    <p v-if="error" role="alert">{{ error }}</p>
+
     <button
       v-if="canWrite"
       class="ghost-button"
@@ -22,6 +22,7 @@
   </section>
 </template>
 <script setup lang="ts">
+const toast = useToast();
 const props = defineProps<{ base: string; canWrite: boolean }>()
 const ready = ref(false),
   busy = ref(false),
@@ -32,6 +33,7 @@ async function load() {
     ready.value = (
       await $fetch<{ providerReady: boolean }>(`${props.base}/card`)
     ).providerReady
+    if (ready.value) toast.add({ title: "Vínculo financeiro configurado", color: "success" })
   } catch {
     error.value = "Não foi possível consultar o vínculo Stripe."
   } finally {
@@ -55,4 +57,5 @@ async function provision() {
   }
 }
 onMounted(load)
+useFeedbackToast(error, 'error');
 </script>

@@ -8,7 +8,7 @@
         </div>
         <button class="ghost-button" :disabled="pending" @click="refresh()">Atualizar</button>
       </div>
-      <p v-if="error" class="status-banner" role="alert">Não foi possível carregar os eventos. Tente novamente.</p>
+
       <p v-if="pending" class="empty-state" role="status">Carregando eventos...</p>
       <div v-else class="split-list">
         <div v-for="event in events" :key="event.id" class="list-row">
@@ -55,4 +55,5 @@ const events = computed(() =>
       : []),
   ]),
 );
+useFeedbackToast(() => error.value ? 'Não foi possível carregar os eventos. Tente novamente.' : '');
 </script>

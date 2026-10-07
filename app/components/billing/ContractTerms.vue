@@ -15,8 +15,7 @@
         do contrato permanecem no histórico; estas condições serão utilizadas
         pela nova recorrência.
       </p>
-      <p v-if="error" role="alert" class="status-banner">{{ error }}</p>
-      <p v-if="message" role="status">{{ message }}</p>
+
       <p v-if="loading" role="status">Carregando condições...</p>
       <div
         v-if="data?.current?.terms.billingMode === 'courtesy'"
@@ -716,6 +715,8 @@ onMounted(async () => {
     error.value = "Não foi possível consultar os planos do Licensing.";
   }
 });
+useFeedbackToast(error, 'error');
+useFeedbackToast(message, 'success');
 </script>
 <style scoped>
 .panel-heading h2 {
