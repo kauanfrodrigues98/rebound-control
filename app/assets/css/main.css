@@ -18,6 +18,22 @@
   --amber: #fbbf24;
   --red: #fb7185;
   --shadow: 0 20px 60px rgba(0, 0, 0, 0.32);
+
+  /* Nuxt UI, including portaled notifications, shares the fixed Control palette. */
+  --ui-bg: var(--surface);
+  --ui-bg-muted: var(--surface-soft);
+  --ui-bg-elevated: var(--surface-strong);
+  --ui-bg-accented: var(--border);
+  --ui-bg-inverted: var(--text);
+  --ui-text: var(--muted-strong);
+  --ui-text-muted: var(--muted);
+  --ui-text-toned: var(--muted-strong);
+  --ui-text-highlighted: var(--text);
+  --ui-text-inverted: var(--bg);
+  --ui-border: var(--border);
+  --ui-border-muted: var(--border);
+  --ui-border-accented: var(--border-strong);
+  --ui-border-inverted: var(--text);
 }
 
 * {
