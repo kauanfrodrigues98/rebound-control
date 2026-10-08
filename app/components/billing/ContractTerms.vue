@@ -311,6 +311,31 @@
               />Pagamento direto</label
             >
           </fieldset>
+          <fieldset
+            v-if="
+              selectedPlan?.deployment === 'cloud' &&
+              !['free', 'cloud-free'].includes(form.planId) &&
+              form.billingMode !== 'courtesy'
+            "
+          >
+            <legend>Excedentes autorizados no contrato</legend>
+            <p class="muted-text">
+              Informe o preço em reais por unidade. Campos vazios bloqueiam
+              excedentes. O cliente ainda precisa autorizar o consumo nas
+              configurações do workspace. O fechamento é mensal em UTC, com
+              fatura própria de excedentes e vencimento em 7 dias.
+            </p>
+            <div class="terms-grid">
+              <label v-for="resource in overageResources" :key="resource.key"
+                >{{ resource.label
+                }}<input
+                  v-model.trim="overageRates[resource.key]"
+                  inputmode="decimal"
+                  placeholder="Não permitir excedente"
+                  :disabled="busy"
+              /></label>
+            </div>
+          </fieldset>
           <h3>Limites personalizados</h3>
           <p class="muted-text">
             Campos vazios usam o plano selecionado. Nos limites máximos, digite
@@ -416,6 +441,14 @@ const form = reactive({
     "card" | "boleto" | "external"
   >,
 });
+const overageResources = [
+  { key: "dlq_events", label: "Por evento DLQ excedente" },
+  { key: "ai_analysis", label: "Por análise IA excedente" },
+  { key: "payload_replays", label: "Por replay excedente (manual ou automático)" },
+] as const;
+const overageRates = reactive<
+  Record<"dlq_events" | "ai_analysis" | "payload_replays", string>
+>({ dlq_events: "", ai_analysis: "", payload_replays: "" });
 const overrides = reactive<Record<string, string>>({});
 const limitFields = [
   { key: "maxUsers", label: "Usuários" },
@@ -547,6 +580,10 @@ function major(value: number) {
 function initialize(row: ContractRevision | null) {
   if (!row) return;
   const terms = row.terms;
+  for (const resource of overageResources)
+    overageRates[resource.key] = terms.overage?.[resource.key]
+      ? major(terms.overage[resource.key]!)
+      : "";
   Object.assign(form, {
     planId: terms.planId,
     pricing: terms.pricing,
@@ -651,7 +688,24 @@ async function publish() {
       const value = overrides[field.key];
       if (value) values[field.key] = value === "true";
     }
+    const overage: Partial<
+      Record<"dlq_events" | "ai_analysis" | "payload_replays", number>
+    > = {};
+    if (
+      form.billingMode !== "courtesy" &&
+      selectedPlan.value?.deployment === "cloud" &&
+      !["free", "cloud-free"].includes(form.planId)
+    ) {
+      for (const resource of overageResources)
+        if (overageRates[resource.key]) {
+          const rate = amount(overageRates[resource.key]);
+          if (rate <= 0)
+            throw new Error("Preço do excedente deve ser positivo.");
+          overage[resource.key] = rate;
+        }
+    }
     const body = {
+      overage,
       planId: form.planId,
       pricing: form.pricing,
       billingMode: form.billingMode,
@@ -715,8 +769,8 @@ onMounted(async () => {
     error.value = "Não foi possível consultar os planos do Licensing.";
   }
 });
-useFeedbackToast(error, 'error');
-useFeedbackToast(message, 'success');
+useFeedbackToast(error, "error");
+useFeedbackToast(message, "success");
 </script>
 <style scoped>
 .panel-heading h2 {

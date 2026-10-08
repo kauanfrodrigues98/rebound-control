@@ -1,29 +1,24 @@
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="customer-drawer-overlay" @click.self="emit('close')">
-      <aside
-        class="customer-drawer-panel"
-        :class="sizeClass"
-        role="dialog"
-        aria-modal="true"
-        :aria-label="title"
-      >
-        <header class="customer-drawer-header">
-          <div>
-            <h2>{{ title }}</h2>
-            <p v-if="description">{{ description }}</p>
-          </div>
-          <button class="customer-drawer-close" type="button" @click="emit('close')">
-            <UIcon name="i-lucide-x" />
-          </button>
-        </header>
-
-        <div class="customer-drawer-body">
-          <slot />
-        </div>
-      </aside>
-    </div>
-  </Teleport>
+  <USlideover
+    :open="open"
+    :title="title"
+    :description="description || undefined"
+    :ui="{
+      content: `customer-drawer-panel ${sizeClass}`,
+      header: 'customer-drawer-header',
+      body: 'customer-drawer-body',
+    }"
+    @update:open="handleOpenChange"
+  >
+    <template #close>
+      <button class="customer-drawer-close" type="button" aria-label="Fechar painel">
+        <UIcon name="i-lucide-x" />
+      </button>
+    </template>
+    <template #body>
+      <slot />
+    </template>
+  </USlideover>
 </template>
 
 <script setup lang="ts">
@@ -43,6 +38,10 @@ const props = withDefaults(
 const emit = defineEmits<{
   close: [];
 }>();
+
+function handleOpenChange(open: boolean): void {
+  if (!open) emit('close');
+}
 
 const sizeClass = computed(() => `customer-drawer-panel-${props.size}`);
 </script>

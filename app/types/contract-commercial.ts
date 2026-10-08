@@ -9,6 +9,9 @@ export interface ContractTerms {
   billingMode?: "standard" | "courtesy";
   courtesyExpiresAt?: string | null;
   courtesyEndedAt?: string;
+  overage?: Partial<
+    Record<"dlq_events" | "ai_analysis" | "payload_replays", number>
+  >;
   amount: number;
   setupAmount: number;
   currency: "BRL";
