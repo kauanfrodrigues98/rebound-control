@@ -1,20 +1,60 @@
 <template>
-  <div ref="rootEl" class="control-date-picker">
-    <button
-      class="control-date-trigger"
-      type="button"
-      :aria-expanded="open"
-      :disabled="disabled"
-      @click="toggle"
+  <div class="control-date-picker">
+    <UPopover
+      v-model:open="open"
+      :content="{ align: 'start', side: 'bottom', collisionPadding: 16 }"
+      :ui="{ content: 'control-date-popover' }"
     >
-      <span :class="{ placeholder: !modelValue }">
-        {{ selectedLabel }}
-      </span>
-      <span class="date-trigger-icon" aria-hidden="true">
-        <UIcon name="i-lucide-calendar-days" />
-      </span>
-    </button>
+      <button
+        class="control-date-trigger"
+        type="button"
+        :aria-expanded="open"
+        :disabled="disabled"
+      >
+        <span :class="{ placeholder: !modelValue }">
+          {{ selectedLabel }}
+        </span>
+        <span class="date-trigger-icon" aria-hidden="true">
+          <UIcon name="i-lucide-calendar-days" />
+        </span>
+      </button>
+      <template #content>
+        <div class="date-picker-header">
+          <button type="button" aria-label="Mes anterior" @click="moveMonth(-1)">
+            <UIcon name="i-lucide-chevron-left" />
+          </button>
+          <strong>{{ monthLabel }}</strong>
+          <button type="button" aria-label="Proximo mes" @click="moveMonth(1)">
+            <UIcon name="i-lucide-chevron-right" />
+          </button>
+        </div>
 
+        <div class="date-picker-weekdays" aria-hidden="true">
+          <span v-for="day in weekdays" :key="day">{{ day }}</span>
+        </div>
+
+        <div class="date-picker-grid">
+          <button
+            v-for="day in calendarDays"
+            :key="day.key"
+            type="button"
+            :class="{
+              muted: !day.currentMonth,
+              today: day.value === todayValue,
+              selected: day.value === modelValue,
+            }"
+            @click="selectDate(day.value)"
+          >
+            {{ day.date.getDate() }}
+          </button>
+        </div>
+
+        <div class="date-picker-actions">
+          <button type="button" @click="selectDate(todayValue)">Hoje</button>
+          <button type="button" @click="clearDate">Limpar</button>
+        </div>
+      </template>
+    </UPopover>
     <input
       :name="name"
       :required="required"
@@ -25,43 +65,6 @@
       aria-hidden="true"
       readonly
     />
-
-    <div v-if="open" class="control-date-popover">
-      <div class="date-picker-header">
-        <button type="button" aria-label="Mes anterior" @click="moveMonth(-1)">
-          <UIcon name="i-lucide-chevron-left" />
-        </button>
-        <strong>{{ monthLabel }}</strong>
-        <button type="button" aria-label="Proximo mes" @click="moveMonth(1)">
-          <UIcon name="i-lucide-chevron-right" />
-        </button>
-      </div>
-
-      <div class="date-picker-weekdays" aria-hidden="true">
-        <span v-for="day in weekdays" :key="day">{{ day }}</span>
-      </div>
-
-      <div class="date-picker-grid">
-        <button
-          v-for="day in calendarDays"
-          :key="day.key"
-          type="button"
-          :class="{
-            muted: !day.currentMonth,
-            today: day.value === todayValue,
-            selected: day.value === modelValue,
-          }"
-          @click="selectDate(day.value)"
-        >
-          {{ day.date.getDate() }}
-        </button>
-      </div>
-
-      <div class="date-picker-actions">
-        <button type="button" @click="selectDate(todayValue)">Hoje</button>
-        <button type="button" @click="clearDate">Limpar</button>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -83,7 +86,6 @@ const emit = defineEmits<{
   'update:modelValue': [value: string]
 }>()
 
-const rootEl = ref<HTMLElement | null>(null)
 const open = ref(false)
 const visibleMonth = ref(startOfMonth(parseDateInput(props.modelValue) ?? new Date()))
 
@@ -137,21 +139,6 @@ watch(
   },
 )
 
-onMounted(() => {
-  document.addEventListener('pointerdown', handleOutsideClick)
-  document.addEventListener('keydown', handleKeydown)
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('pointerdown', handleOutsideClick)
-  document.removeEventListener('keydown', handleKeydown)
-})
-
-function toggle(): void {
-  if (props.disabled) return
-  open.value = !open.value
-}
-
 function moveMonth(amount: number): void {
   visibleMonth.value = new Date(
     visibleMonth.value.getFullYear(),
@@ -168,22 +155,6 @@ function selectDate(value: string): void {
 function clearDate(): void {
   emit('update:modelValue', '')
   open.value = false
-}
-
-function handleOutsideClick(event: PointerEvent): void {
-  if (!open.value || !rootEl.value) {
-    return
-  }
-
-  if (!rootEl.value.contains(event.target as Node)) {
-    open.value = false
-  }
-}
-
-function handleKeydown(event: KeyboardEvent): void {
-  if (event.key === 'Escape') {
-    open.value = false
-  }
 }
 
 function parseDateInput(value?: string): Date | null {
