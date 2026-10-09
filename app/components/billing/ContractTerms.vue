@@ -53,8 +53,10 @@
       <div v-if="data?.current" class="terms-summary">
         <strong
           >Versão vigente {{ data.current.sourceVersion }}:
-          {{ billingMoney(data.current.terms.amount, "BRL") }} a cada
-          {{ data.current.terms.intervalMonths }} mês(es)</strong
+          {{
+            billingMoney(data.current.terms.amount, data.current.terms.currency)
+          }}
+          a cada {{ data.current.terms.intervalMonths }} mês(es)</strong
         >
         <p>
           {{
@@ -80,7 +82,7 @@
         <article v-for="revision in data.versions" :key="revision.id">
           <strong
             >Versão {{ revision.sourceVersion }} ·
-            {{ billingMoney(revision.terms.amount, "BRL") }} /
+            {{ billingMoney(revision.terms.amount, revision.terms.currency) }} /
             {{ revision.terms.intervalMonths }} mês(es)</strong
           >
           <span
@@ -90,6 +92,11 @@
             }}</span
           >
           <p>{{ revision.terms.reason }}</p>
+          <p v-if="revision.terms.currencyChange">
+            Troca de moeda: {{ revision.terms.currencyChange.from }} →
+            {{ revision.terms.currency }}. Solicitante / chamado:
+            {{ revision.terms.currencyChange.requestedBy }}
+          </p>
           <p v-if="revision.cancelledAt">
             Revisão cancelada. A sincronização do cancelamento será repetida se
             necessário.
@@ -144,6 +151,13 @@
           </button>
         </div>
       </details>
+      <BillingContractCurrency
+        v-if="canWrite && editable && data?.current"
+        :customer-id="customerId"
+        :contract-id="contract.id"
+        :current="data.current"
+        @refresh="load"
+      />
       <BillingContractRecurrence
         :customer-id="customerId"
         :contract-id="contract.id"
@@ -192,6 +206,18 @@
           /></label>
           <div class="terms-grid">
             <label
+              >Moeda da conta financeira<select
+                v-model="form.currency"
+                :disabled="busy || !!data?.versions.length"
+                @change="currencyChanged"
+              >
+                <option value="BRL">BRL · Real brasileiro</option>
+                <option value="USD">USD · Dólar americano</option></select
+              ><small
+                >A moeda é preservada depois da primeira contratação.</small
+              ></label
+            >
+            <label
               >Plano<select
                 v-model="form.planId"
                 required
@@ -229,7 +255,7 @@
                   :key="price.id"
                   :value="price.id"
                 >
-                  {{ billingMoney(price.amount, "BRL") }} /
+                  {{ billingMoney(price.amount, price.currency) }} /
                   {{ price.intervalMonths }} mês(es) ·
                   {{ dateTime(price.effectiveAt) }}
                 </option>
@@ -237,8 +263,9 @@
             >
             <template v-else
               ><label
-                >Valor total do ciclo (BRL)<BillingMoneyInput
+                >Valor total do ciclo ({{ form.currency }})<BillingMoneyInput
                   v-model="form.amount"
+                  :currency="form.currency"
                   required
                   :disabled="busy || form.billingMode === 'courtesy'" /></label
               ><label
@@ -254,8 +281,9 @@
               ></template
             >
             <label
-              >Implantação (BRL)<BillingMoneyInput
+              >Implantação ({{ form.currency }})<BillingMoneyInput
                 v-model="form.setupAmount"
+                :currency="form.currency"
                 required
                 :disabled="busy || form.billingMode === 'courtesy'"
             /></label>
@@ -302,6 +330,7 @@
                 v-model="form.allowedMethods"
                 type="checkbox"
                 value="boleto"
+                :disabled="form.currency !== 'BRL'"
               />Boleto pela Stripe</label
             ><label class="method"
               ><input
@@ -320,9 +349,9 @@
           >
             <legend>Excedentes autorizados no contrato</legend>
             <p class="muted-text">
-              Informe o preço em reais por unidade. Campos vazios bloqueiam
-              excedentes. O cliente ainda precisa autorizar o consumo nas
-              configurações do workspace. O fechamento é mensal em UTC, com
+              Informe o preço em {{ form.currency }} por unidade. Campos vazios
+              bloqueiam excedentes. O cliente ainda precisa autorizar o consumo
+              nas configurações do workspace. O fechamento é mensal em UTC, com
               fatura própria de excedentes e vencimento em 7 dias.
             </p>
             <div class="terms-grid">
@@ -425,6 +454,7 @@ const path = computed(
 );
 const form = reactive({
   planId: props.contract.planId || "",
+  currency: "BRL" as "BRL" | "USD",
   pricing: "custom" as "custom" | "catalog",
   billingMode: "standard" as "standard" | "courtesy",
   courtesyExpiresAt: "",
@@ -444,7 +474,10 @@ const form = reactive({
 const overageResources = [
   { key: "dlq_events", label: "Por evento DLQ excedente" },
   { key: "ai_analysis", label: "Por análise IA excedente" },
-  { key: "payload_replays", label: "Por replay excedente (manual ou automático)" },
+  {
+    key: "payload_replays",
+    label: "Por replay excedente (manual ou automático)",
+  },
 ] as const;
 const overageRates = reactive<
   Record<"dlq_events" | "ai_analysis" | "payload_replays", string>
@@ -571,7 +604,7 @@ function methods(values: string[]) {
   return values.map((value) => labels[value] ?? value).join(", ");
 }
 function amount(value: string) {
-  return minorAmount(value, "BRL", true);
+  return minorAmount(value, form.currency, true);
 }
 function major(value: number) {
   const amount = BigInt(value);
@@ -586,6 +619,7 @@ function initialize(row: ContractRevision | null) {
       : "";
   Object.assign(form, {
     planId: terms.planId,
+    currency: terms.currency,
     pricing: terms.pricing,
     billingMode: terms.billingMode ?? "standard",
     courtesyExpiresAt: terms.courtesyExpiresAt
@@ -632,6 +666,7 @@ async function loadPrices() {
   try {
     prices.value = await $fetch<CommercialPriceCatalog>(
       `/api/billing/plans/${encodeURIComponent(form.planId)}/prices`,
+      { query: { currency: form.currency } },
     );
     form.priceVersionId = selectedPrice || prices.value.current?.id || "";
   } catch {
@@ -640,6 +675,15 @@ async function loadPrices() {
   } finally {
     priceLoading.value = false;
   }
+}
+async function currencyChanged() {
+  form.priceVersionId = "";
+  form.amount = "";
+  form.setupAmount = "0";
+  if (form.currency !== "BRL")
+    form.allowedMethods = form.allowedMethods.filter((m) => m !== "boleto");
+  for (const resource of overageResources) overageRates[resource.key] = "";
+  await loadPrices();
 }
 async function planChanged() {
   form.priceVersionId = "";
@@ -707,6 +751,7 @@ async function publish() {
     const body = {
       overage,
       planId: form.planId,
+      currency: form.currency,
       pricing: form.pricing,
       billingMode: form.billingMode,
       courtesyExpiresAt:

@@ -30,6 +30,17 @@
         Cloud.
       </p>
 
+      <label class="price-currency"
+        >Moeda do catálogo
+        <select
+          v-model="currency"
+          :disabled="saving || loading"
+          @change="currencyChanged"
+        >
+          <option value="BRL">BRL · Real brasileiro</option>
+          <option value="USD">USD · Dólar americano</option>
+        </select>
+      </label>
       <p class="muted-text">
         Defina o valor de cada ciclo e quando ele passa a valer. Contratos
         existentes preservam suas condições acordadas.
@@ -66,12 +77,14 @@
       >
         <div>
           <h3>Nova versão de preço</h3>
+
           <p class="muted-text">Informe o valor total do ciclo selecionado.</p>
         </div>
         <div class="price-fields">
           <label
             >Valor por ciclo<BillingMoneyInput
               v-model="form.amount"
+              :currency="currency"
               required
               :disabled="saving"
           /></label>
@@ -198,6 +211,7 @@ const { user } = useControlAuth();
 const canWrite = computed(() => user.value?.role === "admin");
 const catalog = ref<CommercialPriceCatalog | null>(null);
 const page = ref(1);
+const currency = ref<"BRL" | "USD">("BRL");
 const loading = ref(false);
 const saving = ref(false);
 const error = ref("");
@@ -240,7 +254,7 @@ async function load() {
   error.value = "";
   try {
     catalog.value = await $fetch<CommercialPriceCatalog>(path.value, {
-      query: { page: page.value },
+      query: { page: page.value, currency: currency.value },
     });
   } catch {
     catalog.value = null;
@@ -249,6 +263,12 @@ async function load() {
   } finally {
     loading.value = false;
   }
+}
+async function currencyChanged() {
+  page.value = 1;
+  form.amount = "";
+  attempt = null;
+  await load();
 }
 async function changePage(delta: number) {
   page.value += delta;
@@ -260,7 +280,7 @@ async function publish() {
   success.value = "";
   saving.value = true;
   try {
-    const amount = minorAmount(form.amount, "BRL", true);
+    const amount = minorAmount(form.amount, currency.value, true);
     if (form.reason.trim().length < 3)
       throw new Error("Informe o motivo com pelo menos três caracteres.");
     const scheduled = form.timing === "scheduled";
@@ -272,6 +292,7 @@ async function publish() {
       throw new Error("Escolha uma data e hora futuras para agendar o preço.");
     const hash = JSON.stringify({
       amount,
+      currency: currency.value,
       intervalMonths: form.intervalMonths,
       timing: form.timing,
       effectiveAt: scheduled ? form.effectiveAt : null,
@@ -283,7 +304,7 @@ async function publish() {
         key: requestKey(),
         body: {
           amount,
-          currency: "BRL",
+          currency: currency.value,
           intervalMonths: form.intervalMonths,
           effectiveAt: date.toISOString(),
           reason: form.reason.trim(),
@@ -324,10 +345,34 @@ async function publish() {
   }
 }
 onMounted(load);
-useFeedbackToast(error, 'error');
-useFeedbackToast(success, 'success');
+useFeedbackToast(error, "error");
+useFeedbackToast(success, "success");
 </script>
 <style scoped>
+.price-currency {
+  display: grid;
+  gap: 8px;
+  max-width: 360px;
+  width: 100%;
+}
+.price-currency select {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  padding: 0 12px;
+  color: var(--text);
+  background: #121722;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+}
+.price-currency select:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+.price-currency select:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
 .plan-prices {
   color: var(--text);
   margin: 24px 0;

@@ -14,7 +14,8 @@ export interface ContractTerms {
   >;
   amount: number;
   setupAmount: number;
-  currency: "BRL";
+  currency: "BRL" | "USD";
+  currencyChange?: { from: "BRL" | "USD"; requestedBy: string };
   intervalMonths: number;
   dueDay: number;
   allowedMethods: Array<"card" | "boleto" | "external">;
