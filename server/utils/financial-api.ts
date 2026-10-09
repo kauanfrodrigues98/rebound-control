@@ -29,6 +29,11 @@ export async function proxyFinancialApi(
           ["GET", `customers/${uuid}/contracts/${uuid}/terms`],
           ["POST", `customers/${uuid}/contracts/${uuid}/terms`],
           ["POST", `customers/${uuid}/contracts/${uuid}/terms/courtesy/end`],
+          [
+            "POST",
+            `customers/${uuid}/contracts/${uuid}/terms/currency/preview`,
+          ],
+          ["POST", `customers/${uuid}/contracts/${uuid}/terms/currency`],
           ["POST", `customers/${uuid}/contracts/${uuid}/terms/${uuid}/sync`],
           ["POST", `customers/${uuid}/contracts/${uuid}/terms/${uuid}/cancel`],
           ["GET", `customers/${uuid}/contracts/${uuid}/termination`],
@@ -99,6 +104,8 @@ export async function proxyFinancialApi(
     query.set("page", requestUrl.searchParams.get("page")!);
   if (requestUrl.searchParams.has("format"))
     query.set("format", requestUrl.searchParams.get("format")!);
+  if (requestUrl.searchParams.has("currency"))
+    query.set("currency", requestUrl.searchParams.get("currency")!);
   const suffix = query.size ? `?${query}` : "";
   const document = isFinancialDocumentPath(path);
   const body = ["POST", "PUT"].includes(method)
@@ -167,12 +174,21 @@ export async function proxyFinancialApi(
       typeof error.statusCode === "number"
         ? error.statusCode
         : 502;
+    const detail = (error as { data?: { message?: unknown } }).data?.message;
+    const currencyMessage =
+      /\/terms\/currency(?:\/preview)?$/.test(path) &&
+      [400, 409].includes(status) &&
+      typeof detail === "string" &&
+      detail.length <= 1000
+        ? detail
+        : null;
     throw createError({
       statusCode: status,
       statusMessage:
-        status === 401
+        currencyMessage ??
+        (status === 401
           ? "O acesso expirou. Entre novamente ou solicite um novo link."
-          : "Não foi possível concluir a operação financeira.",
+          : "Não foi possível concluir a operação financeira."),
     });
   }
 }
